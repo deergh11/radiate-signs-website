@@ -17,15 +17,11 @@ export default function Footer() {
       }}>
         {/* Brand */}
         <div>
-          <div style={{
-            fontFamily: 'Bebas Neue, sans-serif',
-            fontSize: '1.8rem',
-            letterSpacing: '3px',
-            color: 'white',
-            marginBottom: 16,
-          }}>
-            RADIATE<span style={{ color: 'var(--neon-pink)' }}> SIGNS</span>
-          </div>
+          <img
+            src="/logo.png"
+            alt="Radiate Signs"
+            style={{ height: '108px', width: 'auto', marginBottom: 16, display: 'block' }}
+          />
           <p style={{ color: 'var(--text-muted)', lineHeight: 1.7, fontSize: '0.9rem', maxWidth: 320, marginBottom: 24 }}>
             Custom neon signs, channel letters, and LED installs for businesses across Canada. Designed, sourced, and installed by us.
           </p>

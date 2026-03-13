@@ -124,8 +124,8 @@ function QuoteForm() {
       {form.builderText && (
         <div style={{
           padding: '16px 20px',
-          background: 'rgba(255,45,120,0.08)',
-          border: '1px solid rgba(255,45,120,0.3)',
+          background: 'rgba(194,113,186,0.08)',
+          border: '1px solid rgba(194,113,186,0.3)',
           marginBottom: 40,
           display: 'flex',
           gap: 12,
@@ -212,7 +212,7 @@ function QuoteForm() {
               onClick={() => set('service', s)}
               style={{
                 padding: '10px 20px',
-                background: form.service === s ? 'rgba(255,45,120,0.15)' : 'var(--bg-card)',
+                background: form.service === s ? 'rgba(194,113,186,0.15)' : 'var(--bg-card)',
                 border: `1px solid ${form.service === s ? 'var(--neon-pink)' : 'var(--border)'}`,
                 color: form.service === s ? 'white' : 'var(--text-muted)',
                 fontSize: '0.8rem',
@@ -238,7 +238,7 @@ function QuoteForm() {
                 onClick={() => set('budget', b)}
                 style={{
                   padding: '10px 16px',
-                  background: form.budget === b ? 'rgba(0,245,255,0.08)' : 'var(--bg-card)',
+                  background: form.budget === b ? 'rgba(115,194,202,0.08)' : 'var(--bg-card)',
                   border: `1px solid ${form.budget === b ? 'var(--neon-cyan)' : 'var(--border)'}`,
                   color: form.budget === b ? 'white' : 'var(--text-muted)',
                   fontSize: '0.8rem',
@@ -261,7 +261,7 @@ function QuoteForm() {
                 onClick={() => set('timeline', t)}
                 style={{
                   padding: '10px 16px',
-                  background: form.timeline === t ? 'rgba(0,245,255,0.08)' : 'var(--bg-card)',
+                  background: form.timeline === t ? 'rgba(115,194,202,0.08)' : 'var(--bg-card)',
                   border: `1px solid ${form.timeline === t ? 'var(--neon-cyan)' : 'var(--border)'}`,
                   color: form.timeline === t ? 'white' : 'var(--text-muted)',
                   fontSize: '0.8rem',
@@ -292,7 +292,7 @@ function QuoteForm() {
       </div>
 
       {error && (
-        <div style={{ marginTop: 16, padding: '12px 16px', background: 'rgba(255,45,120,0.1)', border: '1px solid rgba(255,45,120,0.3)', color: 'var(--neon-pink)', fontSize: '0.85rem' }}>
+        <div style={{ marginTop: 16, padding: '12px 16px', background: 'rgba(194,113,186,0.1)', border: '1px solid rgba(194,113,186,0.3)', color: 'var(--neon-pink)', fontSize: '0.85rem' }}>
           {error}
         </div>
       )}

@@ -35,28 +35,16 @@ export default function Navbar() {
         transition: 'all 0.4s ease',
         background: scrolled ? 'rgba(8,8,8,0.95)' : 'transparent',
         backdropFilter: scrolled ? 'blur(20px)' : 'none',
-        borderBottom: scrolled ? '1px solid rgba(255,45,120,0.15)' : '1px solid transparent',
+        borderBottom: scrolled ? '1px solid rgba(194,113,186,0.15)' : '1px solid transparent',
       }}
     >
       {/* Logo */}
       <Link href="/" style={{ textDecoration: 'none' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{
-            width: 8,
-            height: 8,
-            borderRadius: '50%',
-            background: 'var(--neon-pink)',
-            boxShadow: '0 0 10px var(--neon-pink), 0 0 30px var(--neon-pink)',
-          }} className="flicker" />
-          <span style={{
-            fontFamily: 'Bebas Neue, sans-serif',
-            fontSize: '1.5rem',
-            letterSpacing: '3px',
-            color: 'white',
-          }}>
-            RADIATE<span style={{ color: 'var(--neon-pink)' }}> SIGNS</span>
-          </span>
-        </div>
+        <img
+          src="/logo.png"
+          alt="Radiate Signs"
+          style={{ height: '56px', width: 'auto', objectFit: 'contain', display: 'block' }}
+        />
       </Link>
 
       {/* Desktop links */}
@@ -114,6 +102,7 @@ export default function Navbar() {
           >
             <X size={28} />
           </button>
+          <img src="/logo.png" alt="Radiate Signs" style={{ height: '64px', width: 'auto' }} />
           {links.map(l => (
             <Link
               key={l.href}

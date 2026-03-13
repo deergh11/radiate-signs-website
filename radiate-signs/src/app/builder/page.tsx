@@ -4,11 +4,11 @@ import Link from 'next/link'
 import { Download, ArrowRight, RotateCcw } from 'lucide-react'
 
 const NEON_COLORS = [
-  { name: 'Hot Pink', value: '#ff2d78', shadow: '255,45,120' },
-  { name: 'Cyan Blue', value: '#00f5ff', shadow: '0,245,255' },
+  { name: 'Radiate Pink', value: '#c271ba', shadow: '194,113,186' },
+  { name: 'Radiate Cyan', value: '#73c2ca', shadow: '115,194,202' },
   { name: 'Electric Orange', value: '#ff6b00', shadow: '255,107,0' },
   { name: 'Lemon Yellow', value: '#ffe600', shadow: '255,230,0' },
-  { name: 'Violet', value: '#bf00ff', shadow: '191,0,255' },
+  { name: 'Violet', value: '#9f4c9d', shadow: '159,76,157' },
   { name: 'Neon Green', value: '#39ff14', shadow: '57,255,20' },
   { name: 'Ice White', value: '#e8f4ff', shadow: '232,244,255' },
   { name: 'Warm Red', value: '#ff3a20', shadow: '255,58,32' },
@@ -270,7 +270,7 @@ export default function BuilderPage() {
                   onClick={() => setFont(f)}
                   style={{
                     padding: '14px 16px',
-                    background: font.name === f.name ? 'rgba(255,45,120,0.1)' : 'var(--bg-card)',
+                    background: font.name === f.name ? 'rgba(194,113,186,0.1)' : 'var(--bg-card)',
                     border: `1px solid ${font.name === f.name ? 'var(--neon-pink)' : 'var(--border)'}`,
                     color: font.name === f.name ? 'white' : 'var(--text-muted)',
                     fontFamily: f.css,
@@ -337,7 +337,7 @@ export default function BuilderPage() {
                   onClick={() => setBackboard(b)}
                   style={{
                     padding: '8px 16px',
-                    background: backboard.name === b.name ? 'rgba(255,45,120,0.15)' : 'var(--bg-card)',
+                    background: backboard.name === b.name ? 'rgba(194,113,186,0.15)' : 'var(--bg-card)',
                     border: `1px solid ${backboard.name === b.name ? 'var(--neon-pink)' : 'var(--border)'}`,
                     color: backboard.name === b.name ? 'white' : 'var(--text-muted)',
                     fontSize: '0.75rem',

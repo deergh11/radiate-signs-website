@@ -8,8 +8,8 @@ import { ArrowRight } from 'lucide-react'
 const projects = [
   {
     id: 1,
-    src: '/work/project-01.jpg', // ← replace with your image
-    title: 'Restaurant Custom Neon',
+    src: '/work/project-01.jpg',
+    title: 'Custom Neon Sign',
     category: 'Neon Sign',
     location: 'Toronto, ON',
     color: 'var(--neon-pink)',
@@ -17,9 +17,9 @@ const projects = [
   {
     id: 2,
     src: '/work/project-02.jpg',
-    title: 'Retail Channel Letters',
-    category: 'Channel Letters',
-    location: 'Brampton, ON',
+    title: 'Restaurant Feature Wall',
+    category: 'Neon Sign',
+    location: 'Mississauga, ON',
     color: 'var(--neon-cyan)',
   },
   {
@@ -27,83 +27,104 @@ const projects = [
     src: '/work/project-03.jpg',
     title: 'Gym LED Install',
     category: 'LED Rope',
-    location: 'Mississauga, ON',
+    location: 'Brampton, ON',
     color: 'var(--neon-orange)',
   },
   {
     id: 4,
     src: '/work/project-04.jpg',
-    title: 'Salon Neon Signage',
-    category: 'Neon Sign',
+    title: 'Storefront Channel Letters',
+    category: 'Channel Letters',
     location: 'Etobicoke, ON',
     color: 'var(--neon-pink)',
   },
   {
     id: 5,
     src: '/work/project-05.jpg',
-    title: 'Bar UV Printed Sign',
-    category: 'UV Print',
+    title: 'Salon Neon Sign',
+    category: 'Neon Sign',
     location: 'Burlington, ON',
     color: 'var(--neon-yellow)',
   },
   {
     id: 6,
     src: '/work/project-06.jpg',
-    title: 'Barbershop Neon',
-    category: 'Neon Sign',
+    title: 'UV Printed Signage',
+    category: 'UV Print',
     location: 'Waterloo, ON',
     color: 'var(--neon-purple)',
+  },
+  {
+    id: 7,
+    src: '/work/project-07.jpg',
+    title: 'Bar Neon Feature',
+    category: 'Neon Sign',
+    location: 'Toronto, ON',
+    color: 'var(--neon-pink)',
+  },
+  {
+    id: 8,
+    src: '/work/project-08.jpg',
+    title: 'Retail Channel Letters',
+    category: 'Channel Letters',
+    location: 'Mississauga, ON',
+    color: 'var(--neon-cyan)',
+  },
+  {
+    id: 9,
+    src: '/work/project-09.jpg',
+    title: 'Studio LED Rope',
+    category: 'LED Rope',
+    location: 'Brampton, ON',
+    color: 'var(--neon-orange)',
   },
 ]
 
 const categories = ['All', 'Neon Sign', 'Channel Letters', 'LED Rope', 'UV Print']
 
-// Placeholder while you add real images
-function PlaceholderCard({ project }: { project: typeof projects[0] }) {
+// Fallback component when image fails to load
+function ProjectImage({ project }: { project: typeof projects[0] }) {
+  const [error, setError] = useState(false)
+
+  if (error) {
+    return (
+      <div style={{
+        aspectRatio: '4/3',
+        background: 'var(--bg-elevated)',
+        border: '1px solid var(--border)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}>
+        <div style={{
+          fontFamily: 'Bebas Neue, sans-serif',
+          fontSize: '2rem',
+          color: project.color,
+          textShadow: `0 0 20px ${project.color}`,
+          letterSpacing: '4px',
+        }}>
+          RADIATE
+        </div>
+        <div style={{ color: 'var(--text-muted)', fontSize: '0.7rem', marginTop: 8 }}>
+          {project.category}
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div style={{
-      aspectRatio: '4/3',
-      background: 'var(--bg-elevated)',
-      border: '1px solid var(--border)',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      position: 'relative',
-      overflow: 'hidden',
-    }}>
-      {/* Fake neon glow placeholder */}
-      <div style={{
-        fontFamily: 'Bebas Neue, sans-serif',
-        fontSize: '3rem',
-        color: project.color,
-        textShadow: `0 0 20px ${project.color}, 0 0 60px ${project.color}`,
-        letterSpacing: '4px',
-      }}>
-        RADIATE
-      </div>
-      <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: 8, letterSpacing: '2px' }}>
-        {project.category.toUpperCase()}
-      </div>
-      <div style={{
-        position: 'absolute',
-        inset: 0,
-        background: `radial-gradient(circle at 50% 50%, ${project.color}10 0%, transparent 70%)`,
-      }} />
-      <div style={{
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        padding: '16px',
-        fontSize: '0.7rem',
-        color: 'var(--text-muted)',
-        textAlign: 'center',
-        fontStyle: 'italic',
-      }}>
-        Replace with your photo: {project.src}
-      </div>
-    </div>
+    <img
+      src={project.src}
+      alt={project.title}
+      onError={() => setError(true)}
+      style={{
+        width: '100%',
+        aspectRatio: '4/3',
+        objectFit: 'cover',
+        display: 'block',
+      }}
+    />
   )
 }
 
@@ -168,8 +189,8 @@ export default function WorkPage() {
             style={{ position: 'relative', overflow: 'hidden', background: 'var(--bg-card)' }}
             className="card-dark"
           >
-            {/* Image — swap PlaceholderCard for a real <img> tag when you have photos */}
-            <PlaceholderCard project={project} />
+            {/* Image — shows real photo or fallback placeholder */}
+            <ProjectImage project={project} />
 
             {/* Overlay */}
             <div style={{

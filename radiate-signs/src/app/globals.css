@@ -5,15 +5,15 @@
 @tailwind utilities;
 
 :root {
-  --neon-pink: #ff2d78;
-  --neon-cyan: #00f5ff;
+  --neon-pink: #c271ba;
+  --neon-cyan: #73c2ca;
   --neon-orange: #ff6b00;
   --neon-yellow: #ffe600;
-  --neon-purple: #bf00ff;
+  --neon-purple: #9f4c9d;
   --neon-green: #39ff14;
-  --bg-dark: #080808;
-  --bg-card: #0f0f0f;
-  --bg-elevated: #161616;
+  --bg-dark: #000000;
+  --bg-card: #0a0a0a;
+  --bg-elevated: #111111;
   --text-primary: #f5f5f5;
   --text-muted: #888;
   --border: rgba(255,255,255,0.08);
@@ -54,7 +54,7 @@ body {
 .cursor-ring {
   width: 36px;
   height: 36px;
-  border: 1px solid rgba(255, 45, 120, 0.5);
+  border: 1px solid rgba(194, 113, 186, 0.5);
   border-radius: 50%;
   position: fixed;
   pointer-events: none;
@@ -90,12 +90,12 @@ body {
 /* Neon border glow */
 .neon-border-pink {
   border: 1px solid var(--neon-pink);
-  box-shadow: 0 0 10px rgba(255,45,120,0.3), inset 0 0 10px rgba(255,45,120,0.05);
+  box-shadow: 0 0 10px rgba(194,113,186,0.3), inset 0 0 10px rgba(194,113,186,0.05);
 }
 
 .neon-border-cyan {
   border: 1px solid var(--neon-cyan);
-  box-shadow: 0 0 10px rgba(0,245,255,0.3), inset 0 0 10px rgba(0,245,255,0.05);
+  box-shadow: 0 0 10px rgba(115,194,202,0.3), inset 0 0 10px rgba(115,194,202,0.05);
 }
 
 /* Flicker animation */
@@ -169,25 +169,25 @@ body {
   letter-spacing: 2px;
   text-decoration: none;
   transition: all 0.3s ease;
-  box-shadow: 0 0 15px rgba(255,45,120,0.2), inset 0 0 15px rgba(255,45,120,0.05);
+  box-shadow: 0 0 15px rgba(194,113,186,0.2), inset 0 0 15px rgba(194,113,186,0.05);
   cursor: none;
 }
 
 .btn-neon:hover {
-  background: rgba(255,45,120,0.1);
-  box-shadow: 0 0 30px rgba(255,45,120,0.5), inset 0 0 30px rgba(255,45,120,0.1);
+  background: rgba(194,113,186,0.1);
+  box-shadow: 0 0 30px rgba(194,113,186,0.5), inset 0 0 30px rgba(194,113,186,0.1);
   color: #fff;
 }
 
 .btn-neon-cyan {
   color: var(--neon-cyan);
   border-color: var(--neon-cyan);
-  box-shadow: 0 0 15px rgba(0,245,255,0.2), inset 0 0 15px rgba(0,245,255,0.05);
+  box-shadow: 0 0 15px rgba(115,194,202,0.2), inset 0 0 15px rgba(115,194,202,0.05);
 }
 
 .btn-neon-cyan:hover {
-  background: rgba(0,245,255,0.1);
-  box-shadow: 0 0 30px rgba(0,245,255,0.5), inset 0 0 30px rgba(0,245,255,0.1);
+  background: rgba(115,194,202,0.1);
+  box-shadow: 0 0 30px rgba(115,194,202,0.5), inset 0 0 30px rgba(115,194,202,0.1);
 }
 
 /* Section styles */
@@ -214,8 +214,8 @@ body {
 }
 
 .card-dark:hover {
-  border-color: rgba(255,45,120,0.3);
-  box-shadow: 0 0 30px rgba(255,45,120,0.1);
+  border-color: rgba(194,113,186,0.3);
+  box-shadow: 0 0 30px rgba(194,113,186,0.1);
 }
 
 /* Scrollbar */
@@ -224,7 +224,7 @@ body {
 ::-webkit-scrollbar-thumb { background: var(--neon-pink); border-radius: 2px; }
 
 /* Selection */
-::selection { background: rgba(255,45,120,0.3); color: white; }
+::selection { background: rgba(194,113,186,0.3); color: white; }
 
 a { cursor: none; }
 button { cursor: none; }
