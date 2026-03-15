@@ -80,19 +80,19 @@ const tickerItems = [
 
 const heroImages = [
   {
-    src: '/work/header%20pictures/IMG_3489.jpg',
+    src: '/work/header-pictures/IMG_3489.jpg',
     alt: 'Radiate Signs storefront installation project',
   },
   {
-    src: '/work/header%20pictures/IMG_3567.jpg',
+    src: '/work/header-pictures/IMG_3567.jpg',
     alt: 'Custom illuminated signage installation for a commercial space',
   },
   {
-    src: '/work/header%20pictures/IMG_3605.jpg',
+    src: '/work/header-pictures/IMG_3605.jpg',
     alt: 'LED sign installation completed for a business interior',
   },
   {
-    src: '/work/header%20pictures/IMG_8030.jpg',
+    src: '/work/header-pictures/IMG_8030.jpg',
     alt: 'Finished Radiate Signs project showcasing real business signage',
   },
 ]
