@@ -1,9 +1,12 @@
 'use client'
 
+import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { ArrowRight, Zap, MapPin, Star, Clock, Settings, Shield } from 'lucide-react'
+import { ArrowRight, MapPin, Clock, Settings, Shield } from 'lucide-react'
 import { HeroImageCarousel } from '../components/hero-image-carousel'
+import { ServiceExplorer } from '../components/service-explorer'
+import { getCaseStudyProjects } from '../data/projects'
 
 // Animated counter
 function Counter({ to, suffix = '' }: { to: number; suffix?: string }) {
@@ -37,34 +40,6 @@ function Counter({ to, suffix = '' }: { to: number; suffix?: string }) {
 
   return <span ref={ref}>{val}{suffix}</span>
 }
-
-// Services data
-const services = [
-  {
-    title: 'Custom Neon Signs',
-    desc: 'LED neon signs custom built to client specs. Logo, quotes, shapes, any color. Popular with restaurants and gyms.',
-    color: 'var(--neon-pink)',
-    icon: '*',
-  },
-  {
-    title: 'Channel Letters',
-    desc: 'Illuminated 3D letters for storefronts and facades.',
-    color: 'var(--neon-cyan)',
-    icon: '+',
-  },
-  {
-    title: 'UV Printed Signs',
-    desc: 'Full color UV printing on acrylic, metal, wood substrates.',
-    color: 'var(--neon-orange)',
-    icon: 'o',
-  },
-  {
-    title: 'LED Rope Installs',
-    desc: 'Architectural LED lighting for interiors, feature walls, ceilings, exterior outlines.',
-    color: 'var(--neon-yellow)',
-    icon: '#',
-  },
-]
 
 // Ticker
 const tickerItems = [
@@ -104,7 +79,29 @@ const stats = [
   { val: 24, suffix: 'hr', label: 'Free Mockups' },
 ]
 
+const featuredProjects = getCaseStudyProjects().slice(0, 3)
+
 export default function HomePage() {
+  const whyUsRef = useRef<HTMLElement | null>(null)
+  const [whyUsVisible, setWhyUsVisible] = useState(false)
+
+  useEffect(() => {
+    const node = whyUsRef.current
+    if (!node) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return
+        setWhyUsVisible(true)
+        observer.disconnect()
+      },
+      { threshold: 0.2 }
+    )
+
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [])
+
   return (
     <>
       {/* HERO */}
@@ -157,7 +154,13 @@ export default function HomePage() {
             alignItems: 'start',
           }}
         >
-          <div>
+          <div
+            style={{
+              opacity: whyUsVisible ? 1 : 0,
+              transform: whyUsVisible ? 'translateY(0)' : 'translateY(18px)',
+              transition: 'opacity 320ms ease, transform 320ms ease',
+            }}
+          >
             {/* Location badge */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 32 }}>
               <MapPin size={12} color="var(--neon-pink)" />
@@ -456,95 +459,11 @@ export default function HomePage() {
         `}</style>
       </div>
 
-      {/* SERVICES */}
-      <section style={{ padding: '120px 40px' }}>
-        <div style={{ marginBottom: 64 }}>
-          <div className="section-label" style={{ marginBottom: 16 }}>
-            What We Do
-          </div>
-          <h2
-            className="display-heading"
-            style={{ fontSize: 'clamp(3rem, 7vw, 6rem)', color: 'white' }}
-          >
-            Our Services
-          </h2>
-        </div>
-
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-            gap: 2,
-          }}
-        >
-          {services.map((s, i) => (
-            <div
-              key={i}
-              className="card-dark"
-              style={{
-                padding: '48px 36px',
-                position: 'relative',
-                overflow: 'hidden',
-              }}
-              onMouseEnter={(e) => {
-                const el = e.currentTarget
-                el.style.background = `rgba(${
-                  s.color === 'var(--neon-pink)'
-                    ? '255,45,120'
-                    : s.color === 'var(--neon-cyan)'
-                      ? '0,245,255'
-                      : s.color === 'var(--neon-orange)'
-                        ? '255,107,0'
-                        : '255,230,0'
-                },0.05)`
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'var(--bg-card)'
-              }}
-            >
-              <div
-                style={{
-                  fontSize: '2rem',
-                  color: s.color,
-                  textShadow: `0 0 20px ${s.color}`,
-                  marginBottom: 24,
-                }}
-              >
-                {s.icon}
-              </div>
-              <h3
-                style={{
-                  fontFamily: 'Bebas Neue, sans-serif',
-                  fontSize: '1.8rem',
-                  letterSpacing: '2px',
-                  color: 'white',
-                  marginBottom: 16,
-                }}
-              >
-                {s.title}
-              </h3>
-              <p style={{ color: 'var(--text-muted)', lineHeight: 1.7, fontSize: '0.95rem' }}>
-                {s.desc}
-              </p>
-
-              {/* Corner accent */}
-              <div
-                style={{
-                  position: 'absolute',
-                  bottom: 0,
-                  right: 0,
-                  width: 60,
-                  height: 60,
-                  background: `linear-gradient(135deg, transparent 50%, ${s.color}22 50%)`,
-                }}
-              />
-            </div>
-          ))}
-        </div>
-      </section>
+      <ServiceExplorer />
 
       {/* WHY RADIATE */}
       <section
+        ref={whyUsRef}
         style={{
           padding: '120px 40px',
           background: 'var(--bg-card)',
@@ -554,15 +473,21 @@ export default function HomePage() {
       >
         <div
           style={{
-            maxWidth: 1100,
+            maxWidth: 1280,
             margin: '0 auto',
             display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: 80,
-            alignItems: 'center',
+            gridTemplateColumns: 'minmax(0, 0.9fr) minmax(0, 1.1fr)',
+            gap: 48,
+            alignItems: 'start',
           }}
         >
-          <div>
+          <div
+            style={{
+              opacity: whyUsVisible ? 1 : 0,
+              transform: whyUsVisible ? 'translateY(0)' : 'translateY(18px)',
+              transition: 'opacity 320ms ease 100ms, transform 320ms ease 100ms',
+            }}
+          >
             <div className="section-label" style={{ marginBottom: 16 }}>
               Why Us
             </div>
@@ -570,88 +495,218 @@ export default function HomePage() {
               className="display-heading"
               style={{ fontSize: 'clamp(2.5rem, 5vw, 5rem)', color: 'white', marginBottom: 32 }}
             >
-              Direct From
+              Built for
               <br />
-              <span className="neon-text-cyan">The Source</span>
+              <span
+                style={{
+                  color: 'var(--neon-cyan)',
+                  textShadow:
+                    '0 0 4px rgba(115,194,202,0.7), 0 0 10px rgba(115,194,202,0.4), 0 0 18px rgba(115,194,202,0.18)',
+                }}
+              >
+                Real Business Impact
+              </span>
             </h2>
             <p
               style={{
                 color: 'var(--text-muted)',
                 lineHeight: 1.8,
                 fontSize: '1rem',
-                marginBottom: 40,
+                marginBottom: 28,
+                maxWidth: 520,
               }}
             >
-              We&apos;re two people running this operation - no agency markup, no middlemen, no
-              bloat. You deal directly with us, from design all the way through installation. That
-              means better pricing, faster turnarounds, and genuine accountability.
+              Radiate delivers custom signage designed to elevate your space, strengthen your
+              brand, and help your business stand out. From concept to installation, we focus on
+              clean execution, reliable turnaround, and results that feel built for your space from
+              day one.
             </p>
-            <Link href="/quote" className="btn-neon">
-              Start Your Project <ArrowRight size={16} />
-            </Link>
-          </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
             {[
-              {
-                icon: <Zap size={20} />,
-                title: 'Free Design Mockup',
-                desc: 'Get a professional design mockup within 24 hours. No commitment required.',
-              },
-              {
-                icon: <Star size={20} />,
-                title: 'End-to-End Service',
-                desc: "Design, source, deliver, and install - we handle everything so you don't have to.",
-              },
-              {
-                icon: <MapPin size={20} />,
-                title: 'Local Hands-On Team',
-                desc: 'We deliver and install ourselves across Ontario. Direct pricing, no middleman markup.',
-              },
-            ].map((item, i) => (
+              'Custom-built for your brand and space',
+              'Seamless turnaround from concept to install',
+              'High-quality materials and finishes',
+              'Trusted by businesses across Ontario',
+            ].map((item, index) => (
               <div
-                key={i}
+                key={item}
+                className="why-us-bullet"
                 style={{
                   display: 'flex',
-                  gap: 20,
-                  padding: '24px',
-                  background: 'var(--bg-dark)',
-                  border: '1px solid var(--border)',
+                  gap: 12,
+                  alignItems: 'center',
+                  color: 'var(--text-muted)',
+                  marginBottom: 18,
+                  fontWeight: 400,
+                  opacity: whyUsVisible ? 1 : 0,
+                  transform: whyUsVisible ? 'translateY(0)' : 'translateY(16px)',
+                  transition: `opacity 320ms ease ${index * 70}ms, transform 320ms ease ${index * 70}ms`,
                 }}
               >
-                <div style={{ color: 'var(--neon-pink)', flexShrink: 0, marginTop: 2 }}>
-                  {item.icon}
-                </div>
-                <div>
-                  <div
-                    style={{
-                      fontFamily: 'Bebas Neue, sans-serif',
-                      fontSize: '1.2rem',
-                      letterSpacing: '2px',
-                      color: 'white',
-                      marginBottom: 6,
-                    }}
-                  >
-                    {item.title}
-                  </div>
-                  <div
-                    style={{
-                      color: 'var(--text-muted)',
-                      fontSize: '0.9rem',
-                      lineHeight: 1.6,
-                    }}
-                  >
-                    {item.desc}
-                  </div>
-                </div>
+                <span
+                  style={{
+                    width: 10,
+                    height: 10,
+                    borderRadius: '50%',
+                    background: 'var(--neon-pink)',
+                    boxShadow: '0 0 12px rgba(194,113,186,0.8)',
+                    flexShrink: 0,
+                  }}
+                />
+                <span>{item}</span>
               </div>
             ))}
+
+            <div
+              style={{
+                color: 'rgba(255,255,255,0.52)',
+                fontSize: '0.85rem',
+                lineHeight: 1.7,
+                marginTop: 4,
+                maxWidth: 420,
+                opacity: whyUsVisible ? 1 : 0,
+                transform: whyUsVisible ? 'translateY(0)' : 'translateY(16px)',
+                transition: 'opacity 340ms ease 220ms, transform 340ms ease 220ms',
+              }}
+            >
+              Used by restaurants, retail stores, and growing brands across Ontario
+            </div>
+
+            <div style={{ marginTop: 36 }}>
+              <Link href="/quote" className="btn-neon">
+                Get Your Free Design Mockup <ArrowRight size={16} />
+              </Link>
+            </div>
+          </div>
+
+          <div>
+            <div className="section-label" style={{ marginBottom: 16 }}>
+              Featured Work
+            </div>
+
+            <div
+              className="home-featured-grid"
+              style={{
+                display: 'grid',
+                gridTemplateColumns: featuredProjects.length > 2 ? 'repeat(3, minmax(0, 1fr))' : 'repeat(2, minmax(0, 1fr))',
+                gap: 16,
+              }}
+            >
+              {featuredProjects.map((project, index) => {
+                const cardEyebrow = (project.client ?? project.title.split(' ')[0]).toUpperCase()
+                const cardTitle =
+                  project.client && project.title.startsWith(project.client)
+                    ? project.title.replace(project.client, '').trim() || project.category
+                    : project.title.split(' ').slice(1).join(' ') || project.title
+
+                return (
+                <Link
+                  key={project.slug}
+                  href={project.href ?? `/work/${project.slug}`}
+                  style={{ textDecoration: 'none' }}
+                >
+                  <div
+                    className="home-featured-card"
+                    style={{
+                      position: 'relative',
+                      minHeight: 360,
+                      overflow: 'hidden',
+                      border: '1px solid var(--border)',
+                      background: 'var(--bg-dark)',
+                      opacity: whyUsVisible ? 1 : 0,
+                      transform: whyUsVisible ? 'translateY(0)' : 'translateY(18px)',
+                      transition: `opacity 300ms ease ${120 + index * 90}ms, transform 300ms ease ${120 + index * 90}ms, border-color 260ms ease, box-shadow 260ms ease`,
+                    }}
+                  >
+                    <Image
+                      src={project.src}
+                      alt={project.heroImageAlt ?? project.title}
+                      fill
+                      sizes="(max-width: 768px) 100vw, 33vw"
+                      style={{ objectFit: 'cover', transition: 'transform 0.45s ease' }}
+                    />
+                    <div
+                      style={{
+                        position: 'absolute',
+                        inset: 0,
+                        background:
+                          'linear-gradient(180deg, rgba(6,6,6,0.08) 0%, rgba(6,6,6,0.28) 42%, rgba(6,6,6,0.96) 100%)',
+                      }}
+                    />
+                    <div
+                      style={{
+                        position: 'absolute',
+                        left: 20,
+                        right: 20,
+                        bottom: 20,
+                      }}
+                    >
+                      <div
+                        style={{
+                          color: project.color,
+                          fontSize: '0.74rem',
+                          letterSpacing: '3px',
+                          textTransform: 'uppercase',
+                          marginBottom: 8,
+                          fontFamily: 'Bebas Neue, sans-serif',
+                        }}
+                      >
+                        {cardEyebrow}
+                      </div>
+                      <div
+                        style={{
+                          fontFamily: 'Bebas Neue, sans-serif',
+                          fontSize: '1.35rem',
+                          letterSpacing: '2px',
+                          color: 'white',
+                          marginBottom: 10,
+                        }}
+                      >
+                        {cardTitle}
+                      </div>
+                      <div
+                        className="home-featured-card-link"
+                        style={{
+                          color: 'rgba(255,255,255,0.82)',
+                          fontSize: '0.8rem',
+                          letterSpacing: '2px',
+                          textTransform: 'uppercase',
+                        }}
+                      >
+                        View Case Study
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+                )
+              })}
+            </div>
+
+            <div style={{ marginTop: 18, display: 'flex', justifyContent: 'flex-start' }}>
+              <Link href="/work" className="btn-neon btn-neon-cyan" style={{ fontSize: '0.85rem' }}>
+                View All Projects
+              </Link>
+            </div>
           </div>
         </div>
 
         <style>{`
           @media (max-width: 768px) {
             section > div { grid-template-columns: 1fr !important; gap: 48px !important; }
+            .home-featured-grid { grid-template-columns: 1fr !important; }
+          }
+
+          .home-featured-card:hover {
+            border-color: rgba(194, 113, 186, 0.32);
+            box-shadow: 0 0 30px rgba(194, 113, 186, 0.12);
+          }
+
+          .home-featured-card:hover img {
+            transform: scale(1.04);
+          }
+
+          .home-featured-card:hover .home-featured-card-link {
+            color: white;
           }
         `}</style>
       </section>

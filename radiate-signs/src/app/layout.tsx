@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import './globals.css'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
-import CustomCursor from '@/components/CustomCursor'
 
 export const metadata: Metadata = {
   title: 'Radiate Signs — Custom Neon Signs & Signage in Canada',
@@ -23,7 +22,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="grain">
-        <CustomCursor />
         <Navbar />
         <main>{children}</main>
         <Footer />
