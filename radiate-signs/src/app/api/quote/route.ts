@@ -30,7 +30,12 @@ export async function POST(req: NextRequest) {
     uploadedImageName,
     overlayScale,
     overlayPosition,
+    privacyConsent,
   } = body
+
+  if (!privacyConsent) {
+    return NextResponse.json({ error: 'Privacy consent required' }, { status: 400 })
+  }
 
   const htmlContent = `
     <div style="font-family: sans-serif; max-width: 680px; margin: 0 auto; background: #0f0f0f; color: #f5f5f5; padding: 40px; border-radius: 8px;">
@@ -40,6 +45,7 @@ export async function POST(req: NextRequest) {
       <div style="margin-bottom: 24px;">
         <p style="color: #888; font-size: 0.8rem; letter-spacing: 2px; margin-bottom: 10px;">REQUEST MODE</p>
         <p style="color: white; margin: 0;">${intakeMode === 'quick' ? 'Quick Quote' : 'Detailed Project Request'}</p>
+        <p style="color: white; margin: 8px 0 0;">Privacy Policy Consent: Yes</p>
       </div>
 
       <div style="margin-bottom: 24px;">

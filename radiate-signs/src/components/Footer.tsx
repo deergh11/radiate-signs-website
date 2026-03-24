@@ -11,7 +11,7 @@ export default function Footer() {
     }}>
       <div style={{
         display: 'grid',
-        gridTemplateColumns: '2fr 1fr 1fr',
+        gridTemplateColumns: '2fr 1fr 1fr 1fr',
         gap: 60,
         marginBottom: 60,
       }}>
@@ -104,6 +104,38 @@ export default function Footer() {
                 onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}
               >
                 {l.label}
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <div style={{ fontSize: '0.65rem', letterSpacing: '3px', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 20 }}>
+            Legal
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {[
+              { href: '/privacy-policy', label: 'Privacy Policy' },
+              { href: '/terms', label: 'Terms & Conditions' },
+              { href: '/refund-policy', label: 'Refund Policy' },
+            ].map(link => (
+              <Link
+                key={link.href}
+                href={link.href}
+                style={{
+                  color: 'var(--text-muted)',
+                  textDecoration: 'none',
+                  fontSize: '0.9rem',
+                  transition: 'color 0.2s',
+                }}
+                onMouseEnter={event => {
+                  event.currentTarget.style.color = 'white'
+                }}
+                onMouseLeave={event => {
+                  event.currentTarget.style.color = 'var(--text-muted)'
+                }}
+              >
+                {link.label}
               </Link>
             ))}
           </div>

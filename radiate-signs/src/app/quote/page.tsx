@@ -1,6 +1,7 @@
 'use client'
 
 import { Suspense, useEffect, useMemo, useState, type CSSProperties, type ChangeEvent, type ReactNode } from 'react'
+import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { CheckCircle, Send } from 'lucide-react'
 
@@ -89,6 +90,7 @@ type QuoteFormState = {
   uploadedImageName: string
   overlayScale: string
   overlayPosition: string
+  privacyConsent: boolean
 }
 
 const initialFormState = (params: ReturnType<typeof useSearchParams>): QuoteFormState => ({
@@ -118,6 +120,7 @@ const initialFormState = (params: ReturnType<typeof useSearchParams>): QuoteForm
   uploadedImageName: params.get('uploadedImageName') || '',
   overlayScale: params.get('overlayScale') || '',
   overlayPosition: params.get('overlayPosition') || '',
+  privacyConsent: false,
 })
 
 function Section({ label, title, children }: { label: string; title: string; children: ReactNode }) {
@@ -196,7 +199,7 @@ function QuoteForm() {
     }
   }, [])
 
-  const setValue = (key: keyof QuoteFormState, value: string | string[]) => {
+  const setValue = <K extends keyof QuoteFormState>(key: K, value: QuoteFormState[K]) => {
     setForm(prev => ({ ...prev, [key]: value }))
   }
 
@@ -238,6 +241,11 @@ function QuoteForm() {
   const handleSubmit = async () => {
     if (!form.name || !form.email || !form.projectType) {
       setError('Please fill in your name, email, and project type.')
+      return
+    }
+
+    if (!form.privacyConsent) {
+      setError('You must agree to the Privacy Policy before submitting your request.')
       return
     }
 
@@ -693,7 +701,21 @@ function QuoteForm() {
         <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', lineHeight: 1.7, marginBottom: 18 }}>
           Submit your details and we will follow up with the right next step for your signage project.
         </p>
-        <button onClick={handleSubmit} disabled={loading} className="btn-neon" style={{ width: '100%', justifyContent: 'center', fontSize: '1rem', padding: '18px', opacity: loading ? 0.6 : 1 }}>
+        <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginTop: 18, color: 'var(--text-muted)', fontSize: '0.84rem', lineHeight: 1.6 }}>
+          <input
+            type="checkbox"
+            checked={form.privacyConsent}
+            onChange={event => setValue('privacyConsent', event.target.checked)}
+            style={{ marginTop: 2, accentColor: 'var(--neon-pink)' }}
+          />
+          <span>
+            I agree to the <Link href="/privacy-policy" style={{ color: 'var(--neon-cyan)', textDecoration: 'none' }}>Privacy Policy</Link>
+            <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.55)', marginTop: 4 }}>
+              You must agree before submitting your request.
+            </div>
+          </span>
+        </label>
+        <button onClick={handleSubmit} disabled={loading} className="btn-neon" style={{ width: '100%', justifyContent: 'center', fontSize: '1rem', padding: '18px', opacity: loading ? 0.6 : 1, marginTop: 18 }}>
           {loading ? 'Sending...' : <>Get My Free Mockup <Send size={16} /></>}
         </button>
         <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textAlign: 'center', marginTop: 14, lineHeight: 1.6 }}>
