@@ -83,7 +83,12 @@ const featuredProjects = getCaseStudyProjects().slice(0, 3)
 
 export default function HomePage() {
   const whyUsRef = useRef<HTMLElement | null>(null)
+  const [heroVisible, setHeroVisible] = useState(false)
   const [whyUsVisible, setWhyUsVisible] = useState(false)
+
+  useEffect(() => {
+    setHeroVisible(true)
+  }, [])
 
   useEffect(() => {
     const node = whyUsRef.current
@@ -156,8 +161,8 @@ export default function HomePage() {
         >
           <div
             style={{
-              opacity: whyUsVisible ? 1 : 0,
-              transform: whyUsVisible ? 'translateY(0)' : 'translateY(18px)',
+              opacity: heroVisible ? 1 : 0,
+              transform: heroVisible ? 'translateY(0)' : 'translateY(18px)',
               transition: 'opacity 320ms ease, transform 320ms ease',
             }}
           >
