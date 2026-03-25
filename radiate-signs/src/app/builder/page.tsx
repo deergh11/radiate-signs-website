@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { ArrowRight, Download, RotateCcw, Upload, X } from 'lucide-react'
+import { ACCEPTED_UPLOAD_TYPES, MAX_UPLOAD_SIZE_BYTES, STORAGE_KEY } from '@/lib/quote-config'
 
 type NeonColor = {
   name: string
@@ -48,8 +49,6 @@ type BuilderSnapshot = {
   showOverlay: boolean
   uploadedImageName: string
 }
-
-const STORAGE_KEY = 'radiate-builder-state'
 
 const NEON_COLORS: NeonColor[] = [
   { name: 'Warm White', value: '#fff1d6', shadow: '255,241,214' },
@@ -107,6 +106,7 @@ export default function BuilderPage() {
   const [brightness, setBrightness] = useState(3)
   const [mode, setMode] = useState<BuilderMode>('standard')
   const [uploadedImage, setUploadedImage] = useState<UploadedImage | null>(null)
+  const [uploadError, setUploadError] = useState('')
   const [showOverlay, setShowOverlay] = useState(true)
   const [overlayX, setOverlayX] = useState(50)
   const [overlayY, setOverlayY] = useState(50)
@@ -278,11 +278,24 @@ export default function BuilderPage() {
     const file = event.target.files?.[0]
     if (!file) return
 
+    if (!ACCEPTED_UPLOAD_TYPES.includes(file.type as (typeof ACCEPTED_UPLOAD_TYPES)[number])) {
+      setUploadError('Please upload a PNG, JPG, JPEG, or WebP image.')
+      event.target.value = ''
+      return
+    }
+
+    if (file.size > MAX_UPLOAD_SIZE_BYTES) {
+      setUploadError('Please upload an image under 8MB for the mockup preview.')
+      event.target.value = ''
+      return
+    }
+
     if (uploadedImage?.url) {
       URL.revokeObjectURL(uploadedImage.url)
     }
 
     const objectUrl = URL.createObjectURL(file)
+    setUploadError('')
     setUploadedImage({ url: objectUrl, name: file.name, type: file.type })
     setMode('mockup')
     setShowOverlay(true)
@@ -297,6 +310,7 @@ export default function BuilderPage() {
       URL.revokeObjectURL(uploadedImage.url)
     }
     setUploadedImage(null)
+    setUploadError('')
     setMode('standard')
     setOverlayX(50)
     setOverlayY(50)
@@ -994,9 +1008,14 @@ export default function BuilderPage() {
                 {uploadedImage ? (
                   <>Using <span style={{ color: 'white' }}>{uploadedImage.name}</span> as your uploaded-space mockup. It is intended to help with placement, scale, and design direction before we produce a refined professional mockup.</>
                 ) : (
-                  <>Upload a storefront, feature wall, or reception photo to see how your sign could sit in the real space. We will turn this into a cleaner, more accurate professional mockup after submission.</>
+                  <>Upload a storefront, feature wall, or reception photo to see how your sign could sit in the real space. We will turn this into a cleaner, more accurate professional mockup after submission. Max file size: 8MB.</>
                 )}
               </div>
+              {uploadError && (
+                <div style={{ color: 'var(--neon-pink)', fontSize: '0.8rem', lineHeight: 1.6 }}>
+                  {uploadError}
+                </div>
+              )}
             </div>
 
             <label style={{ display: 'block', fontSize: '0.7rem', letterSpacing: '3px', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 12 }}>

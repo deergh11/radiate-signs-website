@@ -1,55 +1,20 @@
 'use client'
 
-import { Suspense, useEffect, useMemo, useState, type CSSProperties, type ChangeEvent, type ReactNode } from 'react'
+import { Suspense, useEffect, useMemo, useRef, useState, type CSSProperties, type ChangeEvent, type ReactNode } from 'react'
 import Link from 'next/link'
+import Script from 'next/script'
 import { useSearchParams } from 'next/navigation'
 import { CheckCircle, Send } from 'lucide-react'
-
-const STORAGE_KEY = 'radiate-builder-state'
-
-const PROJECT_TYPES = [
-  'Custom Neon Sign',
-  'Channel Letters',
-  'Light Box',
-  'Marquee Sign',
-  'LED / Rope Lighting',
-  'House Address Sign',
-  'Not Sure Yet',
-]
-
-const INSTALL_CONTEXTS = [
-  'Storefront Exterior',
-  'Interior Wall',
-  'Window',
-  'Event / Temporary Setup',
-  'Home / Residential',
-  'Other',
-]
-
-const BUDGETS = [
-  'Under $1,000',
-  '$1,000 - $2,500',
-  '$2,500 - $5,000',
-  '$5,000 - $10,000',
-  '$10,000+',
-  'Not Sure Yet',
-]
-
-const TIMELINES = [
-  'ASAP',
-  'Within 2-4 weeks',
-  'Within 1-2 months',
-  'Planning for later',
-  'Just exploring',
-]
-
-const SIZE_INTENTS = [
-  'I know the approximate size',
-  'I need help determining size',
-  'Matching an existing sign',
-]
-
-const SOURCE_OPTIONS = ['Instagram', 'TikTok', 'Google', 'Referral', 'Other']
+import {
+  BUDGETS,
+  INSTALL_CONTEXTS,
+  PROJECT_TYPES,
+  SIZE_INTENTS,
+  SOURCE_OPTIONS,
+  STORAGE_KEY,
+  TIMELINES,
+  type IntakeMode,
+} from '@/lib/quote-config'
 
 const detailedSections = [
   'Contact Details',
@@ -60,8 +25,23 @@ const detailedSections = [
   'Files / Mockup Context',
   'Additional Notes',
 ]
-
-type IntakeMode = 'quick' | 'detailed'
+declare global {
+  interface Window {
+    turnstile?: {
+      render: (
+        container: HTMLElement,
+        options: {
+          sitekey: string
+          callback: (token: string) => void
+          'expired-callback': () => void
+          'error-callback': () => void
+          theme: 'dark'
+        }
+      ) => string
+      reset: (widgetId?: string) => void
+    }
+  }
+}
 
 type QuoteFormState = {
   intakeMode: IntakeMode
@@ -91,6 +71,7 @@ type QuoteFormState = {
   overlayScale: string
   overlayPosition: string
   privacyConsent: boolean
+  turnstileToken: string
 }
 
 const initialFormState = (params: ReturnType<typeof useSearchParams>): QuoteFormState => ({
@@ -121,6 +102,7 @@ const initialFormState = (params: ReturnType<typeof useSearchParams>): QuoteForm
   overlayScale: params.get('overlayScale') || '',
   overlayPosition: params.get('overlayPosition') || '',
   privacyConsent: false,
+  turnstileToken: '',
 })
 
 function Section({ label, title, children }: { label: string; title: string; children: ReactNode }) {
@@ -143,10 +125,15 @@ function Section({ label, title, children }: { label: string; title: string; chi
 
 function QuoteForm() {
   const params = useSearchParams()
+  const turnstileContainerRef = useRef<HTMLDivElement>(null)
+  const turnstileWidgetIdRef = useRef<string | null>(null)
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [turnstileReady, setTurnstileReady] = useState(false)
   const [form, setForm] = useState<QuoteFormState>(() => initialFormState(params))
+  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ''
+  const isDevBypassEnabled = process.env.NODE_ENV !== 'production' && !turnstileSiteKey
 
   useEffect(() => {
     const stored = window.localStorage.getItem(STORAGE_KEY)
@@ -199,6 +186,40 @@ function QuoteForm() {
     }
   }, [])
 
+  useEffect(() => {
+    if (isDevBypassEnabled) {
+      setTurnstileReady(true)
+      setForm(current => ({ ...current, turnstileToken: 'dev-bypass' }))
+    }
+  }, [isDevBypassEnabled])
+
+  useEffect(() => {
+    if (!isDevBypassEnabled && window.turnstile) {
+      renderTurnstile()
+    }
+  }, [isDevBypassEnabled])
+
+  const renderTurnstile = () => {
+    if (!turnstileSiteKey || !window.turnstile || !turnstileContainerRef.current || turnstileWidgetIdRef.current) return
+
+    turnstileWidgetIdRef.current = window.turnstile.render(turnstileContainerRef.current, {
+      sitekey: turnstileSiteKey,
+      theme: 'dark',
+      callback: token => {
+        setValue('turnstileToken', token)
+        setError('')
+      },
+      'expired-callback': () => {
+        setValue('turnstileToken', '')
+      },
+      'error-callback': () => {
+        setValue('turnstileToken', '')
+        setError('Security verification failed to load. Please refresh and try again.')
+      },
+    })
+    setTurnstileReady(true)
+  }
+
   const setValue = <K extends keyof QuoteFormState>(key: K, value: QuoteFormState[K]) => {
     setForm(prev => ({ ...prev, [key]: value }))
   }
@@ -249,6 +270,11 @@ function QuoteForm() {
       return
     }
 
+    if (!form.turnstileToken) {
+      setError('Please complete the security check before submitting.')
+      return
+    }
+
     setLoading(true)
     setError('')
 
@@ -259,10 +285,19 @@ function QuoteForm() {
         body: JSON.stringify(form),
       })
 
+      const result = (await response.json().catch(() => ({}))) as { error?: string }
+
       if (response.ok) {
+        window.localStorage.removeItem(STORAGE_KEY)
         setSubmitted(true)
+      } else if (response.status === 429) {
+        setError('Too many requests right now. Please wait a few minutes and try again.')
       } else {
-        setError('Something went wrong. Please email us directly at radiatesigns@gmail.com')
+        setError(result.error || 'Something went wrong. Please email us directly at radiatesigns@gmail.com')
+        if (turnstileWidgetIdRef.current && window.turnstile) {
+          window.turnstile.reset(turnstileWidgetIdRef.current)
+          setValue('turnstileToken', '')
+        }
       }
     } catch {
       setError('Something went wrong. Please email us directly at radiatesigns@gmail.com')
@@ -701,6 +736,24 @@ function QuoteForm() {
         <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', lineHeight: 1.7, marginBottom: 18 }}>
           Submit your details and we will follow up with the right next step for your signage project.
         </p>
+        <div style={{ marginBottom: 18 }}>
+          {turnstileSiteKey ? (
+            <>
+              <div ref={turnstileContainerRef} />
+              {!turnstileReady && (
+                <div style={{ color: 'var(--text-muted)', fontSize: '0.78rem', marginTop: 8 }}>
+                  Loading security check...
+                </div>
+              )}
+            </>
+          ) : (
+            <div style={{ color: isDevBypassEnabled ? 'var(--text-muted)' : 'var(--neon-pink)', fontSize: '0.78rem', lineHeight: 1.6 }}>
+              {isDevBypassEnabled
+                ? 'Development mode: Turnstile bypass enabled because NEXT_PUBLIC_TURNSTILE_SITE_KEY is not set.'
+                : 'Security check is unavailable. Add NEXT_PUBLIC_TURNSTILE_SITE_KEY to enable quote submissions.'}
+            </div>
+          )}
+        </div>
         <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginTop: 18, color: 'var(--text-muted)', fontSize: '0.84rem', lineHeight: 1.6 }}>
           <input
             type="checkbox"
@@ -715,7 +768,7 @@ function QuoteForm() {
             </div>
           </span>
         </label>
-        <button onClick={handleSubmit} disabled={loading} className="btn-neon" style={{ width: '100%', justifyContent: 'center', fontSize: '1rem', padding: '18px', opacity: loading ? 0.6 : 1, marginTop: 18 }}>
+        <button onClick={handleSubmit} disabled={loading || (!form.turnstileToken && !isDevBypassEnabled)} className="btn-neon" style={{ width: '100%', justifyContent: 'center', fontSize: '1rem', padding: '18px', opacity: loading || (!form.turnstileToken && !isDevBypassEnabled) ? 0.6 : 1, marginTop: 18 }}>
           {loading ? 'Sending...' : <>Get My Free Mockup <Send size={16} /></>}
         </button>
         <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textAlign: 'center', marginTop: 14, lineHeight: 1.6 }}>
@@ -736,6 +789,11 @@ function QuoteForm() {
           }
         }
       `}</style>
+      <Script
+        src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
+        strategy="afterInteractive"
+        onLoad={renderTurnstile}
+      />
     </div>
   )
 }
