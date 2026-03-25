@@ -390,12 +390,12 @@ export default function BuilderPage() {
 
   return (
     <div className="builder-page" style={{ paddingTop: 100, minHeight: '100vh' }}>
-      <div className="builder-page-shell" style={{ padding: '60px 40px 0' }}>
-        <div className="section-label" style={{ marginBottom: 16 }}>Interactive Tool</div>
-        <h1 className="display-heading" style={{ fontSize: 'clamp(2.5rem, 6vw, 5rem)', color: 'white', marginBottom: 16 }}>
+      <div className="builder-page-shell builder-intro-shell" style={{ padding: '60px 40px 0' }}>
+        <div className="section-label builder-intro-label" style={{ marginBottom: 16 }}>Interactive Tool</div>
+        <h1 className="display-heading builder-intro-heading" style={{ fontSize: 'clamp(2.5rem, 6vw, 5rem)', color: 'white', marginBottom: 16 }}>
           Design Your <span className="neon-text-pink">Sign</span>
         </h1>
-        <p style={{ color: 'var(--text-muted)', maxWidth: 620, lineHeight: 1.7 }}>
+        <p className="builder-intro-copy" style={{ color: 'var(--text-muted)', maxWidth: 620, lineHeight: 1.7 }}>
           Build a fast neon concept, then preview it in your own space. This tool is designed to help you move from idea to a clearer mockup request without losing the premium feel of the final sign.
         </p>
       </div>
@@ -800,6 +800,7 @@ export default function BuilderPage() {
           </div>
 
           <div
+            className="builder-preview-caption"
             style={{
               textAlign: 'center',
               marginTop: 12,
@@ -811,21 +812,21 @@ export default function BuilderPage() {
           >
             {mode === 'mockup' && uploadedImage ? 'Visual Mockup in Your Space · For Placement and Style Direction' : 'Live Preview · Approximate Visual Only'}
           </div>
-          <div style={{ textAlign: 'center', marginTop: 8, fontSize: '0.78rem', color: 'rgba(255,255,255,0.56)', lineHeight: 1.5 }}>
+          <div className="builder-preview-disclaimer" style={{ textAlign: 'center', marginTop: 8, fontSize: '0.78rem', color: 'rgba(255,255,255,0.56)', lineHeight: 1.5 }}>
             Preview is for visual reference only. Final designs are refined for production.
           </div>
 
           <div className="builder-preview-actions" style={{ display: 'flex', gap: 12, marginTop: 24, justifyContent: 'center', flexWrap: 'wrap' }}>
             <Link
               href={quoteHref}
-              className="btn-neon"
+              className="btn-neon builder-primary-cta"
               style={{ fontSize: '0.85rem', flex: '1 1 260px', justifyContent: 'center' }}
             >
               Request a Professional Mockup <ArrowRight size={14} />
             </Link>
             <button
               onClick={handleCopyToQuote}
-              className="btn-neon btn-neon-cyan"
+              className="btn-neon btn-neon-cyan builder-icon-action"
               style={{ fontSize: '0.85rem', padding: '14px 20px' }}
               title="Copy design specs"
             >
@@ -833,6 +834,7 @@ export default function BuilderPage() {
             </button>
             <button
               onClick={resetBuilder}
+              className="builder-icon-action builder-reset-action"
               style={{
                 padding: '14px 20px',
                 background: 'transparent',
@@ -847,7 +849,7 @@ export default function BuilderPage() {
         </div>
 
         <div className="builder-controls-column" style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
-          <div>
+          <div className="builder-step-block builder-step-one">
             <div className="section-label" style={{ marginBottom: 10 }}>Step 1</div>
             <h2 style={{ color: 'white', fontSize: '1.1rem', marginBottom: 14, letterSpacing: '0.5px' }}>Enter Your Text</h2>
             <label style={{ display: 'block', fontSize: '0.7rem', letterSpacing: '3px', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 12 }}>
@@ -879,18 +881,19 @@ export default function BuilderPage() {
               }}
               placeholder="Type your sign text..."
             />
-            <div style={{ display: 'grid', gap: 10, marginTop: 12 }}>
+            <div className="builder-preset-groups" style={{ display: 'grid', gap: 10, marginTop: 12 }}>
               {PRESET_GROUPS.map(group => (
-                <div key={group.label}>
-                  <div style={{ color: 'var(--text-muted)', fontSize: '0.72rem', letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: 6 }}>
+                <div key={group.label} className="builder-preset-group">
+                  <div className="builder-preset-label" style={{ color: 'var(--text-muted)', fontSize: '0.72rem', letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: 6 }}>
                     {group.label}
                   </div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  <div className="builder-preset-list" style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                     {group.items.map(preset => (
                       <button
                         key={preset}
                         type="button"
                         onClick={() => setText(preset)}
+                        className="builder-preset-pill"
                         style={{
                           padding: '7px 10px',
                           border: '1px solid rgba(255,255,255,0.08)',
@@ -1276,19 +1279,40 @@ export default function BuilderPage() {
             padding-top: 90px !important;
           }
 
+          .builder-intro-shell {
+            padding-top: 32px !important;
+          }
+
+          .builder-intro-label {
+            margin-bottom: 10px !important;
+          }
+
+          .builder-intro-heading {
+            margin-bottom: 10px !important;
+            line-height: 0.92 !important;
+          }
+
+          .builder-intro-copy {
+            font-size: 0.92rem !important;
+            line-height: 1.6 !important;
+            max-width: 100% !important;
+          }
+
           .builder-page-shell {
             padding-left: 20px !important;
             padding-right: 20px !important;
           }
 
           .builder-main-grid {
-            padding-top: 32px !important;
-            padding-bottom: 36px !important;
+            padding-top: 22px !important;
+            padding-bottom: 28px !important;
+            gap: 24px !important;
           }
 
           .builder-preview-toolbar {
             align-items: stretch !important;
-            gap: 14px !important;
+            gap: 10px !important;
+            margin-bottom: 10px !important;
           }
 
           .builder-mode-switch {
@@ -1301,28 +1325,28 @@ export default function BuilderPage() {
             width: 100% !important;
             text-align: center !important;
             font-size: 0.72rem !important;
-            padding: 10px 12px !important;
+            padding: 8px 10px !important;
           }
 
           .builder-preview-note {
             width: 100% !important;
-            font-size: 0.72rem !important;
-            line-height: 1.6 !important;
+            font-size: 0.7rem !important;
+            line-height: 1.5 !important;
             letter-spacing: 0.4px !important;
           }
 
           .builder-preview-panel {
-            min-height: 340px !important;
-            padding: 16px !important;
+            min-height: 310px !important;
+            padding: 14px !important;
           }
 
           .builder-standard-surface {
-            min-height: 300px !important;
-            padding: 48px 28px 60px !important;
+            min-height: 270px !important;
+            padding: 34px 24px 38px !important;
           }
 
           .builder-mockup-surface {
-            max-height: 300px !important;
+            max-height: 270px !important;
             border-radius: 16px !important;
           }
 
@@ -1336,13 +1360,44 @@ export default function BuilderPage() {
           }
 
           .builder-preview-actions {
-            flex-direction: column !important;
+            margin-top: 14px !important;
+            display: grid !important;
+            grid-template-columns: 1fr auto auto !important;
+            gap: 8px !important;
             align-items: stretch !important;
           }
 
           .builder-preview-actions > * {
-            width: 100% !important;
             justify-content: center !important;
+          }
+
+          .builder-primary-cta {
+            min-height: 46px !important;
+            padding: 12px 16px !important;
+            font-size: 0.78rem !important;
+          }
+
+          .builder-icon-action,
+          .builder-reset-action {
+            min-height: 46px !important;
+            width: 46px !important;
+            padding: 0 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+          }
+
+          .builder-preview-caption {
+            margin-top: 8px !important;
+            font-size: 0.64rem !important;
+            letter-spacing: 1.4px !important;
+            line-height: 1.5 !important;
+          }
+
+          .builder-preview-disclaimer {
+            margin-top: 4px !important;
+            font-size: 0.72rem !important;
+            line-height: 1.45 !important;
           }
 
           .builder-mode-controls,
@@ -1363,7 +1418,34 @@ export default function BuilderPage() {
           }
 
           .builder-controls-column {
-            gap: 24px !important;
+            gap: 18px !important;
+          }
+
+          .builder-step-one {
+            margin-top: -2px !important;
+          }
+
+          .builder-preset-groups {
+            gap: 8px !important;
+            margin-top: 10px !important;
+          }
+
+          .builder-preset-group {
+            display: grid !important;
+            gap: 6px !important;
+          }
+
+          .builder-preset-label {
+            margin-bottom: 0 !important;
+          }
+
+          .builder-preset-list {
+            gap: 6px !important;
+          }
+
+          .builder-preset-pill {
+            padding: 8px 10px !important;
+            font-size: 0.7rem !important;
           }
         }
 
@@ -1373,21 +1455,29 @@ export default function BuilderPage() {
           }
 
           .builder-preview-panel {
-            min-height: 300px !important;
+            min-height: 280px !important;
           }
 
           .builder-standard-surface {
-            min-height: 260px !important;
-            padding: 36px 18px 42px !important;
+            min-height: 232px !important;
+            padding: 28px 16px 30px !important;
           }
 
           .builder-mockup-surface {
-            max-height: 240px !important;
+            max-height: 220px !important;
             border-radius: 14px !important;
           }
 
           .builder-mode-switch {
             grid-template-columns: 1fr !important;
+          }
+
+          .builder-preview-actions {
+            grid-template-columns: 1fr 1fr 1fr !important;
+          }
+
+          .builder-primary-cta {
+            grid-column: 1 / -1 !important;
           }
         }
       `}</style>

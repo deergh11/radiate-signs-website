@@ -47,12 +47,13 @@ export default function Navbar() {
 
   return (
     <nav
+      className="site-navbar"
       style={{
         position: 'fixed',
         top: 0,
         left: 0,
         right: 0,
-        zIndex: 100,
+        zIndex: 200,
         padding: '20px 40px',
         display: 'flex',
         alignItems: 'center',
@@ -113,50 +114,121 @@ export default function Navbar() {
 
       {/* Mobile menu */}
       {open && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(8,8,8,0.98)',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '40px',
-          zIndex: 101,
-        }}>
+        <div
+          className="mobile-menu-overlay"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background:
+              'linear-gradient(180deg, rgba(4,4,4,0.98) 0%, rgba(8,8,8,0.99) 58%, rgba(10,10,10,1) 100%)',
+            backdropFilter: 'blur(22px)',
+            display: 'flex',
+            flexDirection: 'column',
+            zIndex: 220,
+            overflowY: 'auto',
+            WebkitOverflowScrolling: 'touch',
+          }}
+        >
+          <div
+            className="mobile-menu-shell"
+            style={{
+              minHeight: '100dvh',
+              display: 'flex',
+              flexDirection: 'column',
+              padding: '104px 24px 32px',
+            }}
+          >
           <button
             onClick={() => setOpen(false)}
-            style={{ position: 'absolute', top: 24, right: 24, background: 'none', border: 'none', color: 'white', padding: 8 }}
+            aria-label="Close menu"
+            className="mobile-menu-close"
+            style={{
+              position: 'absolute',
+              top: 24,
+              right: 20,
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              color: 'white',
+              width: 44,
+              height: 44,
+              borderRadius: 999,
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
           >
             <X size={28} />
           </button>
-          <Image
-            src="/logo.png"
-            alt="Radiate Signs"
-            width={178}
-            height={64}
-            style={{ height: '64px', width: 'auto' }}
-          />
-          {links.map(l => (
-            <Link
-              key={l.href}
-              href={l.href}
-              onClick={() => setOpen(false)}
+            <div
+              className="mobile-menu-brand"
               style={{
-                fontFamily: 'var(--font-bebas), "Bebas Neue", sans-serif',
-                fontSize: 'clamp(2rem, 10vw, 3rem)',
-                letterSpacing: '2px',
-                color: 'white',
-                textDecoration: 'none',
-                textAlign: 'center',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: 28,
               }}
             >
-              {l.label}
-            </Link>
-          ))}
-          <Link href="/quote" className="btn-neon" onClick={() => setOpen(false)}>
-            Get Free Mockup
-          </Link>
+              <Image
+                src="/logo.png"
+                alt="Radiate Signs"
+                width={178}
+                height={64}
+                style={{ height: '56px', width: 'auto' }}
+              />
+            </div>
+
+            <div
+              className="mobile-menu-list"
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 10,
+                width: '100%',
+                maxWidth: 360,
+                margin: '0 auto',
+              }}
+            >
+              {links.map((l) => (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  onClick={() => setOpen(false)}
+                  className="mobile-menu-link"
+                  style={{
+                    fontFamily: 'var(--font-bebas), "Bebas Neue", sans-serif',
+                    fontSize: 'clamp(1.45rem, 6.2vw, 1.9rem)',
+                    letterSpacing: '1px',
+                    color: 'white',
+                    textDecoration: 'none',
+                    textAlign: 'left',
+                    padding: '16px 18px',
+                    border: '1px solid rgba(255,255,255,0.06)',
+                    background: 'rgba(255,255,255,0.025)',
+                  }}
+                >
+                  {l.label}
+                </Link>
+              ))}
+            </div>
+
+            <div
+              className="mobile-menu-footer"
+              style={{
+                width: '100%',
+                maxWidth: 360,
+                margin: '22px auto 0',
+              }}
+            >
+              <Link
+                href="/quote"
+                className="btn-neon"
+                onClick={() => setOpen(false)}
+                style={{ width: '100%', justifyContent: 'center' }}
+              >
+                Free Mockup
+              </Link>
+            </div>
+          </div>
         </div>
       )}
 
@@ -167,6 +239,41 @@ export default function Navbar() {
           }
           .hidden-mobile { display: none !important; }
           .mobile-menu-btn { display: block !important; }
+          .mobile-menu-overlay {
+            border-top: 1px solid rgba(194,113,186,0.12);
+          }
+          .mobile-menu-link {
+            border-radius: 16px;
+          }
+          .mobile-menu-link:hover {
+            border-color: rgba(194,113,186,0.22);
+            background: rgba(194,113,186,0.06);
+          }
+        }
+
+        @media (max-width: 420px) {
+          .mobile-menu-shell {
+            padding: 96px 18px 24px !important;
+          }
+
+          .mobile-menu-close {
+            top: 18px !important;
+            right: 18px !important;
+          }
+
+          .mobile-menu-brand {
+            margin-bottom: 22px !important;
+          }
+
+          .mobile-menu-list {
+            gap: 8px !important;
+          }
+
+          .mobile-menu-link {
+            padding: 14px 16px !important;
+            font-size: 1.35rem !important;
+            letter-spacing: 0.8px !important;
+          }
         }
       `}</style>
     </nav>
