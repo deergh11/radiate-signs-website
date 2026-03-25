@@ -3,7 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ArrowLeft, ArrowRight, MapPin, Play, ShieldCheck, Wrench } from 'lucide-react'
-import { getCaseStudyProjects, getProjectBySlug } from '@/data/projects'
+import { getCaseStudyProjects, getProjectBySlug } from '@/data/project-case-studies'
 
 type PageProps = {
   params: {
@@ -72,8 +72,8 @@ export default function CaseStudyPage({ params }: PageProps) {
   const content = project.caseStudy
 
   return (
-    <div style={{ paddingTop: 100, minHeight: '100vh' }}>
-      <section style={{ padding: '48px 40px 32px' }}>
+    <div className="case-study-page" style={{ paddingTop: 100, minHeight: '100vh' }}>
+      <section className="case-study-section" style={{ padding: '48px 40px 32px' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto' }}>
           <Link
             href="/work"
@@ -167,7 +167,7 @@ export default function CaseStudyPage({ params }: PageProps) {
                     <div
                       style={{
                         color: 'white',
-                        fontFamily: 'Bebas Neue, sans-serif',
+                        fontFamily: 'var(--font-bebas), "Bebas Neue", sans-serif',
                         letterSpacing: '1.5px',
                         fontSize: '1.3rem',
                       }}
@@ -211,7 +211,7 @@ export default function CaseStudyPage({ params }: PageProps) {
         </div>
       </section>
 
-      <section style={{ padding: '32px 40px 0' }}>
+      <section className="case-study-section" style={{ padding: '32px 40px 0' }}>
         <div
           className="case-study-overview-section"
           style={{
@@ -265,7 +265,7 @@ export default function CaseStudyPage({ params }: PageProps) {
         </div>
       </section>
 
-      <section style={{ padding: '80px 40px 0' }}>
+      <section className="case-study-section" style={{ padding: '80px 40px 0' }}>
         <div
           className="case-study-detail-grid"
           style={{
@@ -298,7 +298,7 @@ export default function CaseStudyPage({ params }: PageProps) {
         </div>
       </section>
 
-      <section style={{ padding: '80px 40px 0' }}>
+      <section className="case-study-section" style={{ padding: '80px 40px 0' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto' }}>
           <div className="section-label" style={{ marginBottom: 14 }}>
             Installation
@@ -346,7 +346,7 @@ export default function CaseStudyPage({ params }: PageProps) {
         </div>
       </section>
 
-      <section style={{ padding: '80px 40px 0' }}>
+      <section className="case-study-section" style={{ padding: '80px 40px 0' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto' }}>
           <div className="section-label" style={{ marginBottom: 14 }}>
             Reel / Video
@@ -404,7 +404,7 @@ export default function CaseStudyPage({ params }: PageProps) {
         </div>
       </section>
 
-      <section style={{ padding: '80px 40px 0' }}>
+      <section className="case-study-section" style={{ padding: '80px 40px 0' }}>
         <div
           className="case-study-result-grid"
           style={{
@@ -433,7 +433,7 @@ export default function CaseStudyPage({ params }: PageProps) {
         </div>
       </section>
 
-      <section style={{ padding: '96px 40px 100px' }}>
+      <section className="case-study-section" style={{ padding: '96px 40px 100px' }}>
         <div
           style={{
             maxWidth: 1280,
@@ -465,6 +465,13 @@ export default function CaseStudyPage({ params }: PageProps) {
       </section>
 
       <style>{`
+        @media (max-width: 768px) {
+          .case-study-section {
+            padding-left: 20px !important;
+            padding-right: 20px !important;
+          }
+        }
+
         @media (max-width: 960px) {
           .case-study-hero-grid,
           .case-study-overview-section,
@@ -478,6 +485,10 @@ export default function CaseStudyPage({ params }: PageProps) {
           .case-study-overview-grid,
           .case-study-gallery-grid {
             grid-template-columns: 1fr !important;
+          }
+
+          .case-study-gallery-grid > div {
+            min-height: 260px !important;
           }
         }
 

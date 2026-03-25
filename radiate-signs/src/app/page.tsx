@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { ArrowRight, MapPin, Clock, Settings, Shield } from 'lucide-react'
 import { HeroImageCarousel } from '../components/hero-image-carousel'
 import { ServiceExplorer } from '../components/service-explorer'
-import { getCaseStudyProjects } from '../data/projects'
+import { getFeaturedProjectCards } from '../data/project-index'
 
 // Animated counter
 function Counter({ to, suffix = '' }: { to: number; suffix?: string }) {
@@ -79,7 +79,7 @@ const stats = [
   { val: 24, suffix: 'hr', label: 'Free Mockups' },
 ]
 
-const featuredProjects = getCaseStudyProjects().slice(0, 3)
+const featuredProjects = getFeaturedProjectCards(3)
 
 export default function HomePage() {
   const whyUsRef = useRef<HTMLElement | null>(null)
@@ -111,6 +111,7 @@ export default function HomePage() {
     <>
       {/* HERO */}
       <section
+        className="home-section home-hero-section"
         style={{
           minHeight: '100vh',
           display: 'flex',
@@ -199,7 +200,7 @@ export default function HomePage() {
 
             <p
               style={{
-                fontFamily: 'Barlow, sans-serif',
+                fontFamily: 'var(--font-barlow), Barlow, sans-serif',
                 fontSize: 'clamp(1rem, 2vw, 1.25rem)',
                 fontWeight: 300,
                 color: 'var(--text-muted)',
@@ -315,6 +316,7 @@ export default function HomePage() {
 
       {/* TRUST STRIP */}
       <section
+        className="home-section"
         style={{
           background: 'var(--bg-card)',
           borderTop: '1px solid var(--border)',
@@ -392,7 +394,7 @@ export default function HomePage() {
                 </div>
                 <h3
                   style={{
-                    fontFamily: 'Bebas Neue, sans-serif',
+                    fontFamily: 'var(--font-bebas), "Bebas Neue", sans-serif',
                     fontSize: '1.2rem',
                     letterSpacing: '2px',
                     color: 'white',
@@ -445,7 +447,7 @@ export default function HomePage() {
             <span
               key={i}
               style={{
-                fontFamily: 'Bebas Neue, sans-serif',
+                fontFamily: 'var(--font-bebas), "Bebas Neue", sans-serif',
                 fontSize: '1rem',
                 letterSpacing: '3px',
                 color: i % 2 === 0 ? 'var(--text-muted)' : 'var(--neon-pink)',
@@ -469,6 +471,7 @@ export default function HomePage() {
       {/* WHY RADIATE */}
       <section
         ref={whyUsRef}
+        className="home-section"
         style={{
           padding: '120px 40px',
           background: 'var(--bg-card)',
@@ -625,7 +628,7 @@ export default function HomePage() {
                   >
                     <Image
                       src={project.src}
-                      alt={project.heroImageAlt ?? project.title}
+                      alt={project.imageAlt ?? project.title}
                       fill
                       sizes="(max-width: 768px) 100vw, 33vw"
                       style={{ objectFit: 'cover', transition: 'transform 0.45s ease' }}
@@ -653,14 +656,14 @@ export default function HomePage() {
                           letterSpacing: '3px',
                           textTransform: 'uppercase',
                           marginBottom: 8,
-                          fontFamily: 'Bebas Neue, sans-serif',
+                          fontFamily: 'var(--font-bebas), "Bebas Neue", sans-serif',
                         }}
                       >
                         {cardEyebrow}
                       </div>
                       <div
                         style={{
-                          fontFamily: 'Bebas Neue, sans-serif',
+                          fontFamily: 'var(--font-bebas), "Bebas Neue", sans-serif',
                           fontSize: '1.35rem',
                           letterSpacing: '2px',
                           color: 'white',
@@ -718,6 +721,7 @@ export default function HomePage() {
 
       {/* CTA */}
       <section
+        className="home-section home-cta-section"
         style={{
           padding: '160px 40px',
           textAlign: 'center',
@@ -770,6 +774,24 @@ export default function HomePage() {
           </Link>
         </div>
       </section>
+
+      <style>{`
+        @media (max-width: 768px) {
+          .home-section {
+            padding-left: 20px !important;
+            padding-right: 20px !important;
+          }
+
+          .home-hero-section {
+            padding-top: 110px !important;
+          }
+
+          .home-cta-section {
+            padding-top: 120px !important;
+            padding-bottom: 120px !important;
+          }
+        }
+      `}</style>
     </>
   )
 }

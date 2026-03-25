@@ -123,14 +123,27 @@ export default function BuilderPage() {
   const resizeStart = useRef({ scale: 1, x: 0 })
 
   useEffect(() => {
-    const allFonts = FONT_STYLES.map(fontOption => fontOption.import).join('&family=')
+    const externalFonts = Array.from(
+      new Set(
+        FONT_STYLES.map((fontOption) => fontOption.import).filter(
+          (fontImport) => fontImport !== 'Bebas+Neue'
+        )
+      )
+    )
+
+    if (externalFonts.length === 0) {
+      return
+    }
+
     const link = document.createElement('link')
     link.rel = 'stylesheet'
-    link.href = `https://fonts.googleapis.com/css2?family=${allFonts}&display=swap`
+    link.href = `https://fonts.googleapis.com/css2?family=${externalFonts.join('&family=')}&display=swap`
     document.head.appendChild(link)
 
     return () => {
-      document.head.removeChild(link)
+      if (document.head.contains(link)) {
+        document.head.removeChild(link)
+      }
     }
   }, [])
 
@@ -376,8 +389,8 @@ export default function BuilderPage() {
   const previewBackground = backboard.bg
 
   return (
-    <div style={{ paddingTop: 100, minHeight: '100vh' }}>
-      <div style={{ padding: '60px 40px 0' }}>
+    <div className="builder-page" style={{ paddingTop: 100, minHeight: '100vh' }}>
+      <div className="builder-page-shell" style={{ padding: '60px 40px 0' }}>
         <div className="section-label" style={{ marginBottom: 16 }}>Interactive Tool</div>
         <h1 className="display-heading" style={{ fontSize: 'clamp(2.5rem, 6vw, 5rem)', color: 'white', marginBottom: 16 }}>
           Design Your <span className="neon-text-pink">Sign</span>
@@ -388,6 +401,7 @@ export default function BuilderPage() {
       </div>
 
       <div
+        className="builder-page-shell builder-main-grid"
         style={{
           display: 'grid',
           gridTemplateColumns: 'minmax(0, 1fr) 400px',
@@ -397,8 +411,9 @@ export default function BuilderPage() {
           alignItems: 'start',
         }}
       >
-        <div style={{ position: 'sticky', top: 120 }}>
+        <div className="builder-preview-column" style={{ position: 'sticky', top: 120 }}>
           <div
+            className="builder-preview-toolbar"
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -409,6 +424,7 @@ export default function BuilderPage() {
             }}
           >
             <div
+              className="builder-mode-switch"
               style={{
                 display: 'inline-flex',
                 background: 'rgba(255,255,255,0.03)',
@@ -424,6 +440,7 @@ export default function BuilderPage() {
                 <button
                   key={tab.key}
                   onClick={() => setMode(tab.key)}
+                  className="builder-mode-button"
                   style={{
                     padding: '10px 16px',
                     borderRadius: 999,
@@ -441,12 +458,13 @@ export default function BuilderPage() {
               ))}
             </div>
 
-            <div style={{ color: 'var(--text-muted)', fontSize: '0.76rem', letterSpacing: '1px' }}>
+            <div className="builder-preview-note" style={{ color: 'var(--text-muted)', fontSize: '0.76rem', letterSpacing: '1px' }}>
               {mode === 'mockup' ? 'Place the sign on the photo, resize it, and use it as a visual mockup guide.' : 'Live preview updates as you design.'}
             </div>
           </div>
 
           <div
+            className="builder-preview-panel"
             ref={previewRef}
             style={{
               background: 'linear-gradient(180deg, #050607 0%, #0d0f12 100%)',
@@ -472,6 +490,7 @@ export default function BuilderPage() {
             {mode === 'mockup' && uploadedImage ? (
               <div
                 ref={mockupSurfaceRef}
+                className="builder-mockup-surface"
                 style={{
                   width: '100%',
                   maxWidth: 860,
@@ -486,6 +505,7 @@ export default function BuilderPage() {
                 }}
               >
                 <img
+                  className="builder-uploaded-image"
                   src={uploadedImage.url}
                   alt="Uploaded business space preview"
                   onLoad={event => {
@@ -551,6 +571,7 @@ export default function BuilderPage() {
                     }}
                   >
                     <div
+                      className="builder-measure-horizontal"
                       style={{
                         position: 'absolute',
                         inset: '-28% -18%',
@@ -562,6 +583,7 @@ export default function BuilderPage() {
                       }}
                     />
                     <div
+                      className="builder-measure-vertical"
                       style={{
                         position: 'absolute',
                         inset: '-18% -8%',
@@ -681,6 +703,7 @@ export default function BuilderPage() {
               </div>
             ) : (
               <div
+                className="builder-standard-surface"
                 style={{
                   width: '100%',
                   maxWidth: 860,
@@ -698,6 +721,7 @@ export default function BuilderPage() {
                 }}
               >
                 <div
+                  className="builder-measure-horizontal"
                   style={{
                     position: 'absolute',
                     inset: 0,
@@ -727,6 +751,7 @@ export default function BuilderPage() {
                   {overlayText}
                 </div>
                 <div
+                  className="builder-measure-vertical"
                   style={{
                     position: 'absolute',
                     inset: 0,
@@ -790,7 +815,7 @@ export default function BuilderPage() {
             Preview is for visual reference only. Final designs are refined for production.
           </div>
 
-          <div style={{ display: 'flex', gap: 12, marginTop: 24, justifyContent: 'center', flexWrap: 'wrap' }}>
+          <div className="builder-preview-actions" style={{ display: 'flex', gap: 12, marginTop: 24, justifyContent: 'center', flexWrap: 'wrap' }}>
             <Link
               href={quoteHref}
               className="btn-neon"
@@ -821,7 +846,7 @@ export default function BuilderPage() {
           </div>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+        <div className="builder-controls-column" style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
           <div>
             <div className="section-label" style={{ marginBottom: 10 }}>Step 1</div>
             <h2 style={{ color: 'white', fontSize: '1.1rem', marginBottom: 14, letterSpacing: '0.5px' }}>Enter Your Text</h2>
@@ -838,7 +863,7 @@ export default function BuilderPage() {
                 background: 'var(--bg-card)',
                 border: '1px solid var(--border)',
                 color: 'white',
-                fontFamily: 'Barlow, sans-serif',
+                fontFamily: 'var(--font-barlow), Barlow, sans-serif',
                 fontSize: '1.1rem',
                 padding: '16px',
                 resize: 'none',
@@ -944,7 +969,7 @@ export default function BuilderPage() {
                 marginBottom: 20,
               }}
             >
-              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <div className="builder-mode-controls" style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                 <button
                   type="button"
                   onClick={() => setMode('standard')}
@@ -970,7 +995,7 @@ export default function BuilderPage() {
                   Upload your space
                 </button>
               </div>
-              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+              <div className="builder-upload-actions" style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -1062,7 +1087,7 @@ export default function BuilderPage() {
               Size
             </label>
             <div style={{ padding: 18, background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-              <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+              <div className="builder-unit-toggle" style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
                 {(['in', 'cm'] as const).map(unit => (
                   <button
                     key={unit}
@@ -1149,7 +1174,7 @@ export default function BuilderPage() {
                   />
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                <div className="builder-overlay-row" style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
                   <button
                     type="button"
                     onClick={() => setShowOverlay(current => !current)}
@@ -1174,7 +1199,7 @@ export default function BuilderPage() {
             <label style={{ display: 'block', fontSize: '0.7rem', letterSpacing: '3px', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 12 }}>
               Preview Backgrounds
             </label>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+            <div className="builder-background-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
               {BACKBOARD_STYLES.map(item => (
                 <button
                   key={item.name}
@@ -1235,13 +1260,134 @@ export default function BuilderPage() {
 
       <style>{`
         @media (max-width: 980px) {
-          div[style*="grid-template-columns: minmax(0, 1fr) 400px"] {
+          .builder-main-grid {
+            grid-template-columns: 1fr !important;
+            gap: 32px !important;
+          }
+
+          .builder-preview-column {
+            position: relative !important;
+            top: 0 !important;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .builder-page {
+            padding-top: 90px !important;
+          }
+
+          .builder-page-shell {
+            padding-left: 20px !important;
+            padding-right: 20px !important;
+          }
+
+          .builder-main-grid {
+            padding-top: 32px !important;
+            padding-bottom: 36px !important;
+          }
+
+          .builder-preview-toolbar {
+            align-items: stretch !important;
+            gap: 14px !important;
+          }
+
+          .builder-mode-switch {
+            width: 100% !important;
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+          }
+
+          .builder-mode-button {
+            width: 100% !important;
+            text-align: center !important;
+            font-size: 0.72rem !important;
+            padding: 10px 12px !important;
+          }
+
+          .builder-preview-note {
+            width: 100% !important;
+            font-size: 0.72rem !important;
+            line-height: 1.6 !important;
+            letter-spacing: 0.4px !important;
+          }
+
+          .builder-preview-panel {
+            min-height: 340px !important;
+            padding: 16px !important;
+          }
+
+          .builder-standard-surface {
+            min-height: 300px !important;
+            padding: 48px 28px 60px !important;
+          }
+
+          .builder-mockup-surface {
+            max-height: 300px !important;
+            border-radius: 16px !important;
+          }
+
+          .builder-uploaded-image {
+            object-fit: contain !important;
+          }
+
+          .builder-measure-horizontal,
+          .builder-measure-vertical {
+            display: none !important;
+          }
+
+          .builder-preview-actions {
+            flex-direction: column !important;
+            align-items: stretch !important;
+          }
+
+          .builder-preview-actions > * {
+            width: 100% !important;
+            justify-content: center !important;
+          }
+
+          .builder-mode-controls,
+          .builder-upload-actions,
+          .builder-unit-toggle,
+          .builder-overlay-row {
+            flex-direction: column !important;
+            align-items: stretch !important;
+          }
+
+          .builder-mode-controls > *,
+          .builder-upload-actions > *,
+          .builder-unit-toggle > *,
+          .builder-overlay-row > * {
+            width: 100% !important;
+            justify-content: center !important;
+            text-align: center !important;
+          }
+
+          .builder-controls-column {
+            gap: 24px !important;
+          }
+        }
+
+        @media (max-width: 560px) {
+          .builder-background-grid {
             grid-template-columns: 1fr !important;
           }
 
-          div[style*="position: sticky"] {
-            position: relative !important;
-            top: 0 !important;
+          .builder-preview-panel {
+            min-height: 300px !important;
+          }
+
+          .builder-standard-surface {
+            min-height: 260px !important;
+            padding: 36px 18px 42px !important;
+          }
+
+          .builder-mockup-surface {
+            max-height: 240px !important;
+            border-radius: 14px !important;
+          }
+
+          .builder-mode-switch {
+            grid-template-columns: 1fr !important;
           }
         }
       `}</style>

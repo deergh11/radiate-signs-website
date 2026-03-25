@@ -27,6 +27,7 @@ export function HeroImageCarousel({ images }: HeroImageCarouselProps) {
 
   return (
     <div
+      className="hero-carousel"
       style={{
         position: 'relative',
         width: '100%',
@@ -97,7 +98,7 @@ export function HeroImageCarousel({ images }: HeroImageCarouselProps) {
           </div>
           <div
             style={{
-              fontFamily: 'Bebas Neue, sans-serif',
+              fontFamily: 'var(--font-bebas), "Bebas Neue", sans-serif',
               fontSize: 'clamp(1.5rem, 3vw, 2.6rem)',
               letterSpacing: '2px',
               color: 'white',
@@ -126,6 +127,20 @@ export function HeroImageCarousel({ images }: HeroImageCarouselProps) {
           ))}
         </div>
       </div>
+
+      <style>{`
+        @media (max-width: 640px) {
+          .hero-carousel {
+            min-height: 300px !important;
+          }
+
+          .hero-carousel > div:last-child {
+            inset: auto 18px 18px 18px !important;
+            flex-direction: column !important;
+            align-items: flex-start !important;
+          }
+        }
+      `}</style>
     </div>
   )
 }

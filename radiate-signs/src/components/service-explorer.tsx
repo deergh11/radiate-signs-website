@@ -227,7 +227,7 @@ export function ServiceExplorer() {
                   </div>
                   <div
                     style={{
-                      fontFamily: 'Bebas Neue, sans-serif',
+                      fontFamily: 'var(--font-bebas), "Bebas Neue", sans-serif',
                       fontSize: '1.5rem',
                       letterSpacing: '2px',
                       color: 'white',
@@ -309,7 +309,7 @@ export function ServiceExplorer() {
                   <div
                     style={{
                       color: 'white',
-                      fontFamily: 'Bebas Neue, sans-serif',
+                      fontFamily: 'var(--font-bebas), "Bebas Neue", sans-serif',
                       fontSize: '1.25rem',
                       letterSpacing: '2px',
                       marginBottom: 16,

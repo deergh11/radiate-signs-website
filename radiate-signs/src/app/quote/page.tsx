@@ -336,7 +336,7 @@ function QuoteForm() {
     background: '#0a0a0a',
     border: '1px solid var(--border)',
     color: 'white',
-    fontFamily: 'Barlow, sans-serif',
+    fontFamily: 'var(--font-barlow), Barlow, sans-serif',
     fontSize: '0.95rem',
     padding: '14px 16px',
     outline: 'none',
@@ -358,7 +358,7 @@ function QuoteForm() {
     border: '1px solid var(--border)',
     color: 'var(--text-muted)',
     fontSize: '0.82rem',
-    fontFamily: 'Barlow, sans-serif',
+    fontFamily: 'var(--font-barlow), Barlow, sans-serif',
     transition: 'all 0.2s ease',
   }
 
@@ -724,6 +724,7 @@ function QuoteForm() {
       )}
 
       <div
+        className="quote-cta-panel"
         style={{
           marginTop: 28,
           padding: 24,
@@ -739,7 +740,9 @@ function QuoteForm() {
         <div style={{ marginBottom: 18 }}>
           {turnstileSiteKey ? (
             <>
-              <div ref={turnstileContainerRef} />
+              <div className="turnstile-wrap" style={{ overflowX: 'auto' }}>
+                <div ref={turnstileContainerRef} />
+              </div>
               {!turnstileReady && (
                 <div style={{ color: 'var(--text-muted)', fontSize: '0.78rem', marginTop: 8 }}>
                   Loading security check...
@@ -780,6 +783,10 @@ function QuoteForm() {
 
       <style>{`
         @media (max-width: 720px) {
+          .quote-cta-panel {
+            padding: 20px !important;
+          }
+
           section > div[style*="grid-template-columns: 1fr 1fr"] {
             grid-template-columns: 1fr !important;
           }
@@ -800,7 +807,7 @@ function QuoteForm() {
 
 export default function QuotePage() {
   return (
-    <div style={{ paddingTop: 100, minHeight: '100vh', padding: '120px 40px 80px' }}>
+    <div className="quote-page" style={{ paddingTop: 100, minHeight: '100vh', padding: '120px 40px 80px' }}>
       <div className="section-label" style={{ marginBottom: 16 }}>Project Intake</div>
       <h1 className="display-heading" style={{ fontSize: 'clamp(2.5rem, 6vw, 5rem)', color: 'white', marginBottom: 16 }}>
         Get Your <span className="neon-text-pink">Free Mockup</span>
@@ -811,6 +818,14 @@ export default function QuotePage() {
       <Suspense fallback={<div style={{ color: 'var(--text-muted)' }}>Loading...</div>}>
         <QuoteForm />
       </Suspense>
+      <style>{`
+        @media (max-width: 768px) {
+          .quote-page {
+            padding-left: 20px !important;
+            padding-right: 20px !important;
+          }
+        }
+      `}</style>
     </div>
   )
 }
