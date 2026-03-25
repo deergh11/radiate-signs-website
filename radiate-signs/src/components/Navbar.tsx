@@ -7,6 +7,7 @@ import { Menu, X } from 'lucide-react'
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
+  const showNavChrome = scrolled && !open
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40)
@@ -59,9 +60,9 @@ export default function Navbar() {
         alignItems: 'center',
         justifyContent: 'space-between',
         transition: 'all 0.4s ease',
-        background: scrolled || open ? 'rgba(8,8,8,0.95)' : 'transparent',
-        backdropFilter: scrolled || open ? 'blur(20px)' : 'none',
-        borderBottom: scrolled || open ? '1px solid rgba(194,113,186,0.15)' : '1px solid transparent',
+        background: showNavChrome ? 'rgba(8,8,8,0.95)' : 'transparent',
+        backdropFilter: showNavChrome ? 'blur(20px)' : 'none',
+        borderBottom: showNavChrome ? '1px solid rgba(194,113,186,0.15)' : '1px solid transparent',
       }}
     >
       {/* Logo */}
