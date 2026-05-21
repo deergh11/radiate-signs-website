@@ -50,6 +50,8 @@ export const BUILDER_MODES = ['standard', 'mockup'] as const
 export const ACCEPTED_UPLOAD_TYPES = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'] as const
 export const MAX_UPLOAD_SIZE_BYTES = 8 * 1024 * 1024
 export const MAX_UPLOAD_FILE_COUNT = 5
+export const MAX_QUOTE_UPLOAD_SIZE_BYTES = 4 * 1024 * 1024
+export const QUOTE_FILE_RETENTION_DAYS = 90
 
 export const RATE_LIMIT_MAX_REQUESTS = 5
 export const RATE_LIMIT_WINDOW_SECONDS = 10 * 60

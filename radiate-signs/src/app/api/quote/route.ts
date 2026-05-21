@@ -1,7 +1,21 @@
+import { randomUUID } from 'node:crypto'
+import { put } from '@vercel/blob'
 import { NextRequest, NextResponse } from 'next/server'
-import { type QuotePayload, escapeHtml, getClientIp, rateLimitQuote, validateQuotePayload, verifyTurnstileToken } from '@/lib/quote-security'
+import { createQuoteFilePath, type StoredQuoteFile } from '@/lib/quote-files'
+import { escapeHtml, getClientIp, rateLimitQuote, validateQuotePayload, validateQuoteUploadFiles, verifyTurnstileToken, type QuotePayload } from '@/lib/quote-security'
 
-function buildEmailHtml(data: QuotePayload) {
+export const runtime = 'nodejs'
+
+const MAX_EMAIL_ATTACHMENT_BYTES = 10 * 1024 * 1024
+const MAX_SINGLE_EMAIL_ATTACHMENT_BYTES = 3 * 1024 * 1024
+
+type EmailAttachment = {
+  filename: string
+  content: string
+  content_type: string
+}
+
+function buildEmailHtml(data: QuotePayload, uploadedFiles: StoredQuoteFile[]) {
   const safe = {
     name: escapeHtml(data.name),
     business: escapeHtml(data.business || '-'),
@@ -28,6 +42,24 @@ function buildEmailHtml(data: QuotePayload) {
     overlayPosition: escapeHtml(data.overlayPosition || '-'),
     files: data.fileNames.length ? data.fileNames.map(fileName => escapeHtml(fileName)).join(', ') : '-',
   }
+
+  const uploadedFilesHtml = uploadedFiles.length
+    ? uploadedFiles
+        .map(file => {
+          const safeFileName = escapeHtml(file.name)
+          const safeViewUrl = escapeHtml(file.viewUrl)
+          const attachedLabel = file.attachedToEmail ? 'Attached to email and stored in Blob' : 'Stored in Blob and linked below'
+
+          return `
+            <li style="margin-bottom: 10px;">
+              <a href="${safeViewUrl}" style="color: #00f5ff; text-decoration: none;">${safeFileName}</a>
+              <span style="color: #888;"> (${Math.max(1, Math.round(file.size / 1024))} KB, ${escapeHtml(file.contentType)})</span>
+              <div style="color: #888; font-size: 0.78rem; margin-top: 4px;">${attachedLabel}</div>
+            </li>
+          `
+        })
+        .join('')
+    : '<li style="color: #888;">No uploaded files</li>'
 
   return `
     <div style="font-family: sans-serif; max-width: 680px; margin: 0 auto; background: #0f0f0f; color: #f5f5f5; padding: 40px; border-radius: 8px;">
@@ -65,6 +97,13 @@ function buildEmailHtml(data: QuotePayload) {
         </table>
       </div>
 
+      <div style="margin-bottom: 24px; padding: 20px; background: #161616; border-radius: 4px;">
+        <p style="color: #888; font-size: 0.8rem; letter-spacing: 2px; margin-bottom: 10px;">UPLOADED FILES</p>
+        <ul style="padding-left: 18px; margin: 0;">
+          ${uploadedFilesHtml}
+        </ul>
+      </div>
+
       ${data.builderText ? `
         <div style="margin: 24px 0; padding: 20px; background: rgba(255,45,120,0.1); border: 1px solid rgba(255,45,120,0.3); border-radius: 4px;">
           <p style="color: #ff2d78; font-size: 0.8rem; letter-spacing: 2px; margin-bottom: 8px;">YOUR DESIGN PREVIEW</p>
@@ -93,7 +132,120 @@ function buildEmailHtml(data: QuotePayload) {
   `
 }
 
+function buildEmailText(data: QuotePayload, uploadedFiles: StoredQuoteFile[]) {
+  const uploadedFilesText = uploadedFiles.length
+    ? uploadedFiles
+        .map(file => `- ${file.name} (${file.contentType}, ${Math.max(1, Math.round(file.size / 1024))} KB): ${file.viewUrl}${file.attachedToEmail ? ' [attached to email]' : ''}`)
+        .join('\n')
+    : '- No uploaded files'
+
+  return [
+    'New Quote Request',
+    '',
+    `Mode: ${data.intakeMode === 'quick' ? 'Quick Quote' : 'Detailed Project Request'}`,
+    `Name: ${data.name}`,
+    `Business: ${data.business || '-'}`,
+    `Email: ${data.email}`,
+    `Phone: ${data.phone || '-'}`,
+    `Source: ${data.source || '-'}`,
+    `Project Type: ${data.projectType || '-'}`,
+    `Install Context: ${data.installationContext || '-'}`,
+    `Location Details: ${data.installLocation || '-'}`,
+    `Approximate Size: ${data.approximateSize || '-'}`,
+    `Sizing Context: ${data.sizeIntent || '-'}`,
+    `Budget: ${data.budget || '-'}`,
+    `Timeline: ${data.timeline || '-'}`,
+    `Selected Files: ${data.fileNames.length ? data.fileNames.join(', ') : '-'}`,
+    '',
+    'Uploaded Files',
+    uploadedFilesText,
+    '',
+    data.builderText
+      ? [
+          'Design Preview',
+          `Text: "${data.builderText}"`,
+          `Color: ${data.builderColor || '-'}`,
+          `Font: ${data.builderFont || '-'}`,
+          `Size: ${data.builderSize || '-'}`,
+          `Brightness: ${data.builderGlow || '-'}`,
+          `Background: ${data.builderBackboard || '-'}`,
+          `Mode: ${data.builderMode === 'mockup' ? 'Upload Your Space' : 'Standard Preview'}`,
+          `Uploaded image used: ${data.usedUploadedImage === 'yes' ? `Yes${data.uploadedImageName ? ` (${data.uploadedImageName})` : ''}` : 'No'}`,
+          `Overlay scale: ${data.overlayScale || '-'}`,
+          `Overlay position: ${data.overlayPosition || '-'}`,
+          '',
+        ].join('\n')
+      : '',
+    `Notes: ${data.notes || '-'}`,
+  ]
+    .filter(Boolean)
+    .join('\n')
+}
+
+function pickEmailAttachments(files: File[]) {
+  let totalSize = 0
+
+  return files.flatMap(file => {
+    const isEligibleImage = file.type.startsWith('image/')
+    const nextTotal = totalSize + file.size
+
+    if (!isEligibleImage || file.size > MAX_SINGLE_EMAIL_ATTACHMENT_BYTES || nextTotal > MAX_EMAIL_ATTACHMENT_BYTES) {
+      return []
+    }
+
+    totalSize = nextTotal
+    return [file]
+  })
+}
+
+async function createEmailAttachments(files: File[]): Promise<EmailAttachment[]> {
+  const attachments: EmailAttachment[] = []
+
+  for (const file of files) {
+    const content = Buffer.from(await file.arrayBuffer()).toString('base64')
+    attachments.push({
+      filename: file.name,
+      content,
+      content_type: file.type,
+    })
+  }
+
+  return attachments
+}
+
+async function sendQuoteEmail({
+  resendKey,
+  payload,
+}: {
+  resendKey: string
+  payload: Record<string, unknown>
+}) {
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${resendKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  })
+
+  if (response.ok) {
+    return { ok: true as const }
+  }
+
+  const errorBody = await response.text().catch(() => '')
+  return { ok: false as const, status: response.status, body: errorBody }
+}
+
 export async function POST(req: NextRequest) {
+  if (process.env.NODE_ENV !== 'production') {
+    console.info(
+      `[quote] Quote submission received in ${process.env.NODE_ENV || 'development'} mode. Turnstile dev bypass ${
+        process.env.NEXT_PUBLIC_DISABLE_TURNSTILE_IN_DEV === 'true' ? 'enabled' : 'disabled'
+      }.`
+    )
+  }
+
   const clientIp = getClientIp(req.headers)
   const rateLimit = await rateLimitQuote(clientIp)
 
@@ -101,12 +253,52 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 })
   }
 
-  let body: unknown
+  let formData: FormData
 
   try {
-    body = await req.json()
+    formData = await req.formData()
   } catch {
-    return NextResponse.json({ error: 'Invalid request body.' }, { status: 400 })
+    return NextResponse.json({ error: 'Invalid form submission.' }, { status: 400 })
+  }
+
+  const uploadedFiles = formData
+    .getAll('files')
+    .filter((value): value is File => value instanceof File && value.size > 0)
+
+  const fileValidation = validateQuoteUploadFiles(uploadedFiles)
+  if (!fileValidation.success) {
+    return NextResponse.json({ error: fileValidation.error }, { status: 400 })
+  }
+
+  const body: Record<string, unknown> = {
+    intakeMode: formData.get('intakeMode'),
+    name: formData.get('name'),
+    business: formData.get('business'),
+    email: formData.get('email'),
+    phone: formData.get('phone'),
+    projectType: formData.get('projectType'),
+    installationContext: formData.get('installationContext'),
+    installLocation: formData.get('installLocation'),
+    approximateSize: formData.get('approximateSize'),
+    sizeIntent: formData.get('sizeIntent'),
+    budget: formData.get('budget'),
+    timeline: formData.get('timeline'),
+    notes: formData.get('notes'),
+    fileNames: fileValidation.files.map(file => file.name),
+    source: formData.get('source'),
+    builderText: formData.get('builderText'),
+    builderColor: formData.get('builderColor'),
+    builderFont: formData.get('builderFont'),
+    builderSize: formData.get('builderSize'),
+    builderGlow: formData.get('builderGlow'),
+    builderBackboard: formData.get('builderBackboard'),
+    builderMode: formData.get('builderMode'),
+    usedUploadedImage: formData.get('usedUploadedImage'),
+    uploadedImageName: formData.get('uploadedImageName'),
+    overlayScale: formData.get('overlayScale'),
+    overlayPosition: formData.get('overlayPosition'),
+    privacyConsent: formData.get('privacyConsent'),
+    turnstileToken: formData.get('turnstileToken'),
   }
 
   const validation = validateQuotePayload(body)
@@ -115,6 +307,13 @@ export async function POST(req: NextRequest) {
   }
 
   const { data } = validation
+  if (process.env.NODE_ENV !== 'production') {
+    console.info(
+      `[quote] Verifying Turnstile token in dev. Received token: ${
+        data.turnstileToken === 'dev-bypass' ? 'dev-bypass' : 'real-token-or-empty'
+      }.`
+    )
+  }
   const turnstileValid = await verifyTurnstileToken(data.turnstileToken, clientIp)
 
   if (!turnstileValid) {
@@ -135,24 +334,80 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true })
   }
 
+  if (uploadedFiles.length > 0 && !process.env.BLOB_READ_WRITE_TOKEN) {
+    console.error('Quote file upload misconfiguration: BLOB_READ_WRITE_TOKEN is missing.')
+    return NextResponse.json({ error: 'File upload service unavailable.' }, { status: 500 })
+  }
+
+  const quoteId = randomUUID()
+  const now = new Date()
+  let storedFiles: StoredQuoteFile[] = []
+
   try {
-    const response = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${resendKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: sender,
-        to: ['radiatesigns@gmail.com'],
-        reply_to: data.email,
-        subject: `New Quote: ${data.projectType || 'Signage Project'} - ${data.name}${data.business ? ` (${data.business})` : ''}`,
-        html: buildEmailHtml(data),
-      }),
+    storedFiles = await Promise.all(
+      uploadedFiles.map(async file => {
+        const pathname = createQuoteFilePath(file.name, quoteId, now)
+        const stored = await put(pathname, file, {
+          access: 'public',
+          addRandomSuffix: false,
+          contentType: file.type,
+          token: process.env.BLOB_READ_WRITE_TOKEN,
+        })
+
+        return {
+          name: file.name,
+          pathname: stored.pathname,
+          url: stored.url,
+          contentType: file.type,
+          size: file.size,
+          viewUrl: stored.url,
+          attachedToEmail: false,
+        }
+      })
+    )
+  } catch (error) {
+    console.error('Quote file upload failed:', error instanceof Error ? error.message : 'Unknown error')
+    return NextResponse.json({ error: 'We could not upload your files. Please try again.' }, { status: 500 })
+  }
+
+  const attachmentFiles = pickEmailAttachments(uploadedFiles)
+  const emailAttachments = await createEmailAttachments(attachmentFiles)
+  const attachmentNames = new Set(attachmentFiles.map(file => file.name))
+  storedFiles = storedFiles.map(file => ({
+    ...file,
+    attachedToEmail: attachmentNames.has(file.name),
+  }))
+
+  const emailPayload = {
+    from: sender,
+    to: ['radiatesigns@gmail.com'],
+    reply_to: data.email,
+    subject: `New Quote: ${data.projectType || 'Signage Project'} - ${data.name}${data.business ? ` (${data.business})` : ''}`,
+    html: buildEmailHtml(data, storedFiles),
+    text: buildEmailText(data, storedFiles),
+  }
+
+  try {
+    let response = await sendQuoteEmail({
+      resendKey,
+      payload: emailAttachments.length ? { ...emailPayload, attachments: emailAttachments } : emailPayload,
     })
 
+    if (!response.ok && emailAttachments.length) {
+      console.warn('Quote email send with attachments failed, retrying without attachments.', response.status, response.body)
+      storedFiles = storedFiles.map(file => ({ ...file, attachedToEmail: false }))
+      response = await sendQuoteEmail({
+        resendKey,
+        payload: {
+          ...emailPayload,
+          html: buildEmailHtml(data, storedFiles),
+          text: buildEmailText(data, storedFiles),
+        },
+      })
+    }
+
     if (!response.ok) {
-      console.error('Quote email send failed with status:', response.status)
+      console.error('Quote email send failed with status:', response.status, response.body)
       return NextResponse.json({ error: 'Quote service unavailable.' }, { status: 500 })
     }
 

@@ -6,8 +6,11 @@ import Script from 'next/script'
 import { useSearchParams } from 'next/navigation'
 import { CheckCircle, Send } from 'lucide-react'
 import {
+  ACCEPTED_UPLOAD_TYPES,
   BUDGETS,
   INSTALL_CONTEXTS,
+  MAX_QUOTE_UPLOAD_SIZE_BYTES,
+  MAX_UPLOAD_FILE_COUNT,
   PROJECT_TYPES,
   SIZE_INTENTS,
   SOURCE_OPTIONS,
@@ -127,13 +130,16 @@ function QuoteForm() {
   const params = useSearchParams()
   const turnstileContainerRef = useRef<HTMLDivElement>(null)
   const turnstileWidgetIdRef = useRef<string | null>(null)
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([])
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [turnstileReady, setTurnstileReady] = useState(false)
   const [form, setForm] = useState<QuoteFormState>(() => initialFormState(params))
   const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ''
-  const isDevBypassEnabled = process.env.NODE_ENV !== 'production' && !turnstileSiteKey
+  const isNonProduction = process.env.NODE_ENV !== 'production'
+  const isDevTurnstileDisabled = isNonProduction && process.env.NEXT_PUBLIC_DISABLE_TURNSTILE_IN_DEV === 'true'
+  const isDevBypassEnabled = isDevTurnstileDisabled
 
   useEffect(() => {
     const stored = window.localStorage.getItem(STORAGE_KEY)
@@ -188,10 +194,16 @@ function QuoteForm() {
 
   useEffect(() => {
     if (isDevBypassEnabled) {
+      console.info('[quote] Turnstile dev bypass is active in the browser.')
       setTurnstileReady(true)
       setForm(current => ({ ...current, turnstileToken: 'dev-bypass' }))
+      return
     }
-  }, [isDevBypassEnabled])
+
+    if (isNonProduction) {
+      console.info('[quote] Turnstile dev bypass is inactive in the browser.')
+    }
+  }, [isDevBypassEnabled, isNonProduction])
 
   useEffect(() => {
     if (!isDevBypassEnabled && window.turnstile) {
@@ -200,6 +212,10 @@ function QuoteForm() {
   }, [isDevBypassEnabled])
 
   const renderTurnstile = () => {
+    if (isDevBypassEnabled) {
+      return
+    }
+
     if (!turnstileSiteKey || !window.turnstile || !turnstileContainerRef.current || turnstileWidgetIdRef.current) return
 
     turnstileWidgetIdRef.current = window.turnstile.render(turnstileContainerRef.current, {
@@ -226,6 +242,35 @@ function QuoteForm() {
 
   const handleFileSelection = (event: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || [])
+    const invalidType = files.find(file => !ACCEPTED_UPLOAD_TYPES.includes(file.type as (typeof ACCEPTED_UPLOAD_TYPES)[number]))
+
+    if (files.length > MAX_UPLOAD_FILE_COUNT) {
+      setError(`Please upload no more than ${MAX_UPLOAD_FILE_COUNT} files.`)
+      setSelectedFiles([])
+      setValue('fileNames', [])
+      event.target.value = ''
+      return
+    }
+
+    if (invalidType) {
+      setError('Please upload PNG, JPG, JPEG, or WebP files only.')
+      setSelectedFiles([])
+      setValue('fileNames', [])
+      event.target.value = ''
+      return
+    }
+
+    const oversizedFile = files.find(file => file.size > MAX_QUOTE_UPLOAD_SIZE_BYTES)
+    if (oversizedFile) {
+      setError(`Please upload files under ${Math.floor(MAX_QUOTE_UPLOAD_SIZE_BYTES / (1024 * 1024))}MB each.`)
+      setSelectedFiles([])
+      setValue('fileNames', [])
+      event.target.value = ''
+      return
+    }
+
+    setError('')
+    setSelectedFiles(files)
     setValue(
       'fileNames',
       files.map(file => file.name)
@@ -279,16 +324,26 @@ function QuoteForm() {
     setError('')
 
     try {
+      const payload = new FormData()
+
+      for (const [key, value] of Object.entries(form)) {
+        if (key === 'fileNames' || Array.isArray(value)) continue
+        payload.append(key, typeof value === 'boolean' ? String(value) : value)
+      }
+
+      form.fileNames.forEach(fileName => payload.append('fileNames', fileName))
+      selectedFiles.forEach(file => payload.append('files', file))
+
       const response = await fetch('/api/quote', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: payload,
       })
 
       const result = (await response.json().catch(() => ({}))) as { error?: string }
 
       if (response.ok) {
         window.localStorage.removeItem(STORAGE_KEY)
+        setSelectedFiles([])
         setSubmitted(true)
       } else if (response.status === 429) {
         setError('Too many requests right now. Please wait a few minutes and try again.')
@@ -504,7 +559,13 @@ function QuoteForm() {
               </div>
               <div>
                 <label style={labelStyle}>Optional Files</label>
-                <input type="file" multiple onChange={handleFileSelection} style={{ ...inputStyle, padding: '12px 16px' }} />
+                <input
+                  type="file"
+                  multiple
+                  accept={ACCEPTED_UPLOAD_TYPES.join(',')}
+                  onChange={handleFileSelection}
+                  style={{ ...inputStyle, padding: '12px 16px' }}
+                />
               </div>
             </div>
             <div style={{ marginTop: 18 }}>
@@ -522,6 +583,9 @@ function QuoteForm() {
                 Files selected: {form.fileNames.join(', ')}
               </div>
             )}
+            <div style={{ color: 'var(--text-muted)', fontSize: '0.78rem', marginTop: 10, lineHeight: 1.6 }}>
+              Uploaded files are stored securely with your quote and shared with our team using protected review links. Max {MAX_UPLOAD_FILE_COUNT} files, {Math.floor(MAX_QUOTE_UPLOAD_SIZE_BYTES / (1024 * 1024))}MB each.
+            </div>
           </Section>
         </div>
       ) : (
@@ -682,9 +746,15 @@ function QuoteForm() {
             <div style={{ display: 'grid', gap: 18 }}>
               <div>
                 <label style={labelStyle}>Upload Logo / Inspiration / Storefront Image</label>
-                <input type="file" multiple onChange={handleFileSelection} style={{ ...inputStyle, padding: '12px 16px' }} />
+                <input
+                  type="file"
+                  multiple
+                  accept={ACCEPTED_UPLOAD_TYPES.join(',')}
+                  onChange={handleFileSelection}
+                  style={{ ...inputStyle, padding: '12px 16px' }}
+                />
                 <div style={{ color: 'var(--text-muted)', fontSize: '0.78rem', marginTop: 8, lineHeight: 1.6 }}>
-                  Selected files will be noted with your request. If needed, we can follow up for full-resolution files.
+                  Uploaded files are stored securely with your request and shared with our team using protected review links. Max {MAX_UPLOAD_FILE_COUNT} files, {Math.floor(MAX_QUOTE_UPLOAD_SIZE_BYTES / (1024 * 1024))}MB each.
                 </div>
               </div>
               <div>
@@ -738,7 +808,12 @@ function QuoteForm() {
           Submit your details and we will follow up with the right next step for your signage project.
         </p>
         <div style={{ marginBottom: 18 }}>
-          {turnstileSiteKey ? (
+          {isDevBypassEnabled ? (
+            <div style={{ color: 'var(--text-muted)', fontSize: '0.78rem', lineHeight: 1.6 }}>
+              Development mode: Cloudflare Turnstile is bypassed for local testing because `NEXT_PUBLIC_DISABLE_TURNSTILE_IN_DEV=true`.
+              Restart `npm run dev` after changing the flag. No real Turnstile challenge is required in this mode.
+            </div>
+          ) : turnstileSiteKey ? (
             <>
               <div className="turnstile-wrap" style={{ overflowX: 'auto' }}>
                 <div ref={turnstileContainerRef} />
@@ -752,7 +827,7 @@ function QuoteForm() {
           ) : (
             <div style={{ color: isDevBypassEnabled ? 'var(--text-muted)' : 'var(--neon-pink)', fontSize: '0.78rem', lineHeight: 1.6 }}>
               {isDevBypassEnabled
-                ? 'Development mode: Turnstile bypass enabled because NEXT_PUBLIC_TURNSTILE_SITE_KEY is not set.'
+                ? 'Development mode: Cloudflare Turnstile is bypassed for local testing because NEXT_PUBLIC_DISABLE_TURNSTILE_IN_DEV=true. Quote submissions use the local dev-bypass token only outside production.'
                 : 'Security check is unavailable. Add NEXT_PUBLIC_TURNSTILE_SITE_KEY to enable quote submissions.'}
             </div>
           )}
@@ -796,11 +871,13 @@ function QuoteForm() {
           }
         }
       `}</style>
-      <Script
-        src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
-        strategy="afterInteractive"
-        onLoad={renderTurnstile}
-      />
+      {!isDevBypassEnabled && (
+        <Script
+          src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
+          strategy="afterInteractive"
+          onLoad={renderTurnstile}
+        />
+      )}
     </div>
   )
 }

@@ -1,10 +1,12 @@
 import {
+  ACCEPTED_UPLOAD_TYPES,
   BUDGETS,
   BUILDER_MODES,
   FIELD_LIMITS,
   INSTALL_CONTEXTS,
   INTAKE_MODES,
   MAX_UPLOAD_FILE_COUNT,
+  MAX_QUOTE_UPLOAD_SIZE_BYTES,
   PROJECT_TYPES,
   RATE_LIMIT_MAX_REQUESTS,
   RATE_LIMIT_WINDOW_SECONDS,
@@ -44,6 +46,12 @@ export type QuotePayload = {
   overlayPosition: string
   privacyConsent: true
   turnstileToken: string
+}
+
+export type QuoteUploadFile = {
+  name: string
+  type: string
+  size: number
 }
 
 type ValidationResult =
@@ -98,6 +106,8 @@ function normalizeString(value: unknown, maxLength: number, field: string): stri
 }
 
 function normalizeBoolean(value: unknown, field: string): boolean {
+  if (value === 'true') return true
+  if (value === 'false') return false
   if (typeof value !== 'boolean') throw new Error(`${field} must be a boolean.`)
   return value
 }
@@ -204,6 +214,52 @@ export function validateQuotePayload(input: unknown): ValidationResult {
   }
 }
 
+export function validateQuoteUploadFiles(input: unknown):
+  | { success: true; files: QuoteUploadFile[] }
+  | { success: false; error: string } {
+  if (!Array.isArray(input)) {
+    return { success: false, error: 'Files must be provided as an array.' }
+  }
+
+  if (input.length > MAX_UPLOAD_FILE_COUNT) {
+    return { success: false, error: 'Too many files were provided.' }
+  }
+
+  try {
+    const files = input.map((entry, index) => {
+      if (!(entry instanceof File)) {
+        throw new Error(`files[${index}] must be a file.`)
+      }
+
+      const normalizedName = normalizeString(entry.name, FIELD_LIMITS.fileName, `files[${index}].name`)
+      if (!normalizedName) {
+        throw new Error(`files[${index}].name is required.`)
+      }
+
+      if (!ACCEPTED_UPLOAD_TYPES.includes(entry.type as (typeof ACCEPTED_UPLOAD_TYPES)[number])) {
+        throw new Error(`${entry.name} has an unsupported file type.`)
+      }
+
+      if (entry.size > MAX_QUOTE_UPLOAD_SIZE_BYTES) {
+        throw new Error(`${entry.name} exceeds the ${Math.floor(MAX_QUOTE_UPLOAD_SIZE_BYTES / (1024 * 1024))}MB upload limit.`)
+      }
+
+      return {
+        name: normalizedName,
+        type: entry.type,
+        size: entry.size,
+      }
+    })
+
+    return { success: true, files }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Invalid files provided.',
+    }
+  }
+}
+
 export function escapeHtml(value: string): string {
   return value
     .replace(/&/g, '&amp;')
@@ -300,10 +356,26 @@ export async function rateLimitQuote(ip: string): Promise<RateLimitResult> {
 }
 
 export async function verifyTurnstileToken(token: string, ip?: string): Promise<boolean> {
+  const isNonProduction = process.env.NODE_ENV !== 'production'
+  const isDevTurnstileDisabled =
+    isNonProduction && process.env.NEXT_PUBLIC_DISABLE_TURNSTILE_IN_DEV === 'true'
+
+  if (!isNonProduction && token === 'dev-bypass') {
+    return false
+  }
+
+  if (isDevTurnstileDisabled) {
+    console.info('[quote] Turnstile dev bypass is active on the server.')
+    return token === 'dev-bypass'
+  }
+
   const secret = process.env.TURNSTILE_SECRET_KEY
 
   if (!secret) {
-    return process.env.NODE_ENV !== 'production' && token === 'dev-bypass'
+    if (isNonProduction) {
+      console.info('[quote] Turnstile dev bypass is inactive on the server because NEXT_PUBLIC_DISABLE_TURNSTILE_IN_DEV is not true.')
+    }
+    return false
   }
 
   try {
